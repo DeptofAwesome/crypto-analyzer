@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Analyzer 2000 — Profitability Matrix</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-cyan: #00f0ff;
+            --neon-magenta: #ff00ff;
+            --neon-green: #00ff41;
+            --neon-purple: #b300ff;
+            --proj-purple: #cc44ff;
+            --dark-bg: #0a0a0f;
+            --grid-color: rgba(0,240,255,0.07);
+            --text-primary: #e0e0ff;
+            --text-secondary: #8080a0;
+            --warning-color: #ffaa00;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Rajdhani',sans-serif;background:var(--dark-bg);color:var(--text-primary);overflow-x:hidden;position:relative;}
+        body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+            background-image:linear-gradient(var(--grid-color) 1px,transparent 1px),linear-gradient(90deg,var(--grid-color) 1px,transparent 1px);
+            background-size:50px 50px;animation:gridMove 20s linear infinite;pointer-events:none;z-index:0;}
+        @keyframes gridMove{0%{transform:translateY(0)}100%{transform:translateY(50px)}}
+        .scanline{position:fixed;top:0;left:0;width:100%;height:100%;
+            background:linear-gradient(to bottom,transparent 0%,rgba(0,240,255,0.022) 50%,transparent 100%);
+            animation:scan 10s linear infinite;pointer-events:none;z-index:999;}
+        @keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
+        .container{max-width:1800px;margin:0 auto;padding:20px;position:relative;z-index:1;}
+
+        /* ── HEADER ── */
+        .header{text-align:center;padding:30px 20px 36px;margin-bottom:28px;}
+        .logo-wrap{display:flex;align-items:center;justify-content:center;gap:26px;margin-bottom:14px;}
+
+        /* SVG Logo */
+        .logo-svg{width:92px;height:92px;flex-shrink:0;
+            filter:drop-shadow(0 0 12px #00f0ff) drop-shadow(0 0 24px #b300ff);
+            animation:logoPulse 3s ease-in-out infinite alternate;}
+        @keyframes logoPulse{0%{filter:drop-shadow(0 0 12px #00f0ff) drop-shadow(0 0 24px #b300ff) ;transform:scale(1);}
+            100%{filter:drop-shadow(0 0 20px #ff00ff) drop-shadow(0 0 36px #00f0ff);transform:scale(1.07);}}
+
+        .logo-text-block{display:flex;flex-direction:column;align-items:flex-start;}
+        .logo-title{font-family:'Orbitron',monospace;font-size:3.1rem;font-weight:900;
+            background:linear-gradient(135deg,var(--neon-cyan) 0%,var(--neon-magenta) 55%,var(--neon-purple) 100%);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+            letter-spacing:4px;line-height:1;animation:glitch 5s infinite;}
+        .logo-year{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;
+            color:var(--neon-cyan);letter-spacing:11px;margin-top:5px;text-shadow:0 0 10px var(--neon-cyan);}
+        @keyframes glitch{0%,88%,100%{transform:translateX(0);opacity:1}
+            90%{transform:translateX(-3px);opacity:.9}92%{transform:translateX(3px);opacity:1}
+            94%{transform:translateX(-2px);opacity:.95}96%{transform:translateX(0);opacity:1}}
+        .tagline{font-family:'Share Tech Mono',monospace;color:var(--neon-green);font-size:.95rem;
+            letter-spacing:3px;text-transform:uppercase;text-shadow:0 0 7px var(--neon-green);}
+
+        /* ── STATUS BAR ── */
+        .status-bar{background:rgba(0,0,0,.65);border:1px solid rgba(0,240,255,.5);border-radius:8px;
+            padding:16px 28px;margin-bottom:26px;display:flex;justify-content:space-around;flex-wrap:wrap;gap:14px;
+            box-shadow:0 0 20px rgba(0,240,255,.18);}
+        .status-item{text-align:center;}
+        .status-label{font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--text-secondary);
+            text-transform:uppercase;letter-spacing:2px;}
+        .status-value{font-family:'Orbitron',monospace;font-size:1.25rem;color:var(--neon-cyan);font-weight:700;margin-top:4px;}
+        .status-value.positive{color:var(--neon-green);}
+        .status-value.negative{color:var(--neon-magenta);}
+
+        /* ── SETTINGS ── */
+        .settings-panel{position:fixed;top:20px;right:20px;background:rgba(4,4,12,.97);
+            border:1px solid var(--neon-purple);border-radius:10px;padding:24px;width:312px;
+            max-height:82vh;overflow-y:auto;z-index:100;
+            transform:translateX(350px);transition:transform .35s cubic-bezier(.4,0,.2,1);
+            box-shadow:0 0 40px rgba(179,0,255,.4);}
+        .settings-panel.active{transform:translateX(0);}
+        .settings-toggle{position:fixed;top:20px;right:20px;background:rgba(0,0,0,.85);
+            border:2px solid var(--neon-purple);color:var(--neon-purple);width:50px;height:50px;
+            border-radius:50%;cursor:pointer;font-size:1.45rem;z-index:101;
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 0 14px rgba(179,0,255,.55);transition:all .3s ease;}
+        .settings-toggle:hover{background:var(--neon-purple);color:#fff;transform:rotate(90deg) scale(1.1);
+            box-shadow:0 0 26px rgba(179,0,255,1);}
+        .weight-control{margin-bottom:20px;}
+        .weight-label{font-family:'Share Tech Mono',monospace;font-size:.8rem;color:var(--neon-cyan);
+            margin-bottom:7px;display:flex;justify-content:space-between;}
+        .weight-value{color:var(--neon-green);font-weight:700;}
+        .weight-slider{width:100%;height:5px;border-radius:3px;background:rgba(0,240,255,.15);
+            outline:none;-webkit-appearance:none;}
+        .weight-slider::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;
+            border-radius:50%;background:var(--neon-cyan);cursor:pointer;box-shadow:0 0 7px var(--neon-cyan);}
+        /* Amplitude slider — gradient track from red → grey → green */
+        .amplitude-slider{background:linear-gradient(90deg,
+            rgba(255,68,136,.4) 0%,
+            rgba(100,100,180,.3) 45%,
+            rgba(100,100,180,.3) 55%,
+            rgba(0,255,136,.4) 100%) !important;}
+        .amplitude-slider::-webkit-slider-thumb{background:var(--proj-purple) !important;
+            box-shadow:0 0 8px var(--proj-purple), 0 0 16px rgba(204,68,255,.4) !important;
+            width:18px !important;height:18px !important;}
+
+        /* ── FILTERS ── */
+        .filters{display:flex;gap:10px;margin-bottom:26px;flex-wrap:wrap;align-items:center;}
+        .filter-btn{background:rgba(0,0,0,.6);border:1px solid var(--neon-cyan);color:var(--neon-cyan);
+            padding:9px 20px;border-radius:5px;cursor:pointer;font-family:'Share Tech Mono',monospace;
+            font-size:.86rem;text-transform:uppercase;letter-spacing:1px;transition:all .25s ease;}
+        .filter-btn:hover,.filter-btn.active{background:var(--neon-cyan);color:var(--dark-bg);
+            box-shadow:0 0 13px var(--neon-cyan);transform:translateY(-2px);}
+        .refresh-btn{background:linear-gradient(135deg,var(--neon-cyan),var(--neon-purple));
+            border:none;color:#fff;padding:10px 20px;border-radius:5px;cursor:pointer;
+            font-family:'Share Tech Mono',monospace;font-size:.86rem;text-transform:uppercase;
+            letter-spacing:1px;margin-left:auto;transition:all .25s ease;}
+        .refresh-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,240,255,.4);}
+
+        /* ── LOADING ── */
+        .loading{text-align:center;padding:90px 20px;}
+        .loading-spinner{width:78px;height:78px;border:4px solid rgba(0,240,255,.1);
+            border-top:4px solid var(--neon-cyan);border-radius:50%;margin:0 auto 20px;
+            animation:spin 1s linear infinite;}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        .loading-text{font-family:'Share Tech Mono',monospace;color:var(--neon-cyan);font-size:1.05rem;letter-spacing:2px;}
+
+        /* ── TABLE ── */
+        .crypto-table{background:rgba(0,0,0,.55);border:1px solid rgba(0,240,255,.4);border-radius:10px;
+            overflow:hidden;margin-bottom:28px;box-shadow:0 0 28px rgba(0,240,255,.13);}
+        table{width:100%;border-collapse:collapse;}
+        thead{background:rgba(0,240,255,.07);}
+        th{padding:13px 11px;text-align:left;font-family:'Orbitron',monospace;font-size:.75rem;
+            color:var(--neon-cyan);text-transform:uppercase;letter-spacing:1.5px;
+            border-bottom:1px solid rgba(0,240,255,.35);cursor:pointer;user-select:none;white-space:nowrap;}
+        th:hover{background:rgba(0,240,255,.12);}
+        td{padding:12px 11px;border-bottom:1px solid rgba(0,240,255,.06);font-family:'Rajdhani',sans-serif;}
+        tr:last-child td{border-bottom:none;}
+        tr:hover{background:rgba(0,240,255,.035);}
+        .rank{font-family:'Orbitron',monospace;font-weight:700;color:var(--neon-purple);font-size:1.1rem;}
+        .crypto-name{display:flex;align-items:center;gap:9px;}
+        .crypto-icon{width:28px;height:28px;border-radius:50%;}
+        .coin-label{display:flex;flex-direction:column;}
+        .coin-name{font-weight:600;font-size:.97rem;}
+        .coin-name-link{font-weight:600;font-size:.97rem;color:var(--text-primary);text-decoration:none;
+            border-bottom:1px dotted rgba(0,240,255,.4);transition:all .2s;}
+        .coin-name-link:hover{color:var(--neon-cyan);border-bottom-color:var(--neon-cyan);
+            text-shadow:0 0 8px rgba(0,240,255,.5);}
+        .crypto-symbol{color:var(--text-secondary);font-size:.8rem;}
+        .confidence-score{font-family:'Orbitron',monospace;font-weight:700;font-size:1.15rem;}
+        .score-bar{height:5px;background:rgba(0,240,255,.14);border-radius:3px;overflow:hidden;margin-top:5px;width:88px;}
+        .score-fill{height:100%;background:linear-gradient(90deg,var(--neon-magenta),var(--neon-cyan),var(--neon-green));
+            border-radius:3px;transition:width .6s ease;}
+        .price{font-family:'Orbitron',monospace;font-weight:600;font-size:.9rem;}
+        .change{font-weight:700;padding:3px 7px;border-radius:4px;font-size:.88rem;white-space:nowrap;}
+        .change.positive{color:var(--neon-green);background:rgba(0,255,65,.1);}
+        .change.negative{color:var(--neon-magenta);background:rgba(255,0,255,.1);}
+        .proj-cell{display:flex;flex-direction:column;gap:4px;}
+        .proj-main{font-family:'Orbitron',monospace;font-weight:700;font-size:.95rem;}
+        .proj-main.positive{color:var(--neon-green);}
+        .proj-main.negative{color:var(--neon-magenta);}
+        .proj-range{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+        .proj-bear-tag,.proj-bull-tag{display:inline-flex;align-items:center;gap:5px;
+            font-family:'Share Tech Mono',monospace;font-size:1rem;font-weight:700;padding:2px 7px;border-radius:4px;}
+        .proj-bear-tag{color:#ff4488;background:rgba(255,0,128,.1);border:1px solid rgba(255,0,128,.25);}
+        .proj-bull-tag{color:#00ff88;background:rgba(0,255,100,.08);border:1px solid rgba(0,255,100,.22);}
+        .icon-bear,.icon-bull{width:22px;height:22px;flex-shrink:0;}
+        /* Bigger icons in modal breakdown */
+        .proj-bear{color:#ff4488;font-size:1.05rem;display:inline-flex;align-items:center;gap:5px;}
+        .proj-real{color:var(--neon-cyan);font-size:.98rem;font-weight:700;}
+        .proj-bull{color:#00ff88;font-size:1.05rem;display:inline-flex;align-items:center;gap:5px;}
+        .modal-bear-icon,.modal-bull-icon{width:26px;height:26px;flex-shrink:0;vertical-align:middle;}
+        .action-btn{background:linear-gradient(135deg,rgba(0,240,255,.12),rgba(179,0,255,.12));
+            border:1px solid var(--neon-cyan);color:var(--neon-cyan);padding:7px 15px;border-radius:5px;
+            cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:.8rem;
+            text-transform:uppercase;letter-spacing:.8px;transition:all .22s ease;white-space:nowrap;}
+        .action-btn:hover{background:var(--neon-cyan);color:var(--dark-bg);box-shadow:0 0 14px var(--neon-cyan);transform:translateY(-1px);}
+
+        /* ── VERIFICATION PANEL ── */
+        .verification-panel{background:rgba(0,0,0,.75);border:1px solid rgba(0,255,65,.35);
+            border-radius:8px;padding:12px 16px;margin-bottom:26px;transition:all .3s ease;}
+        .verification-panel.minimized .verification-content{display:none;}
+        .verification-panel.minimized{padding-bottom:12px;}
+        .verification-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;
+            user-select:none;}
+        .verification-title{font-family:'Orbitron',monospace;color:var(--neon-green);font-size:.9rem;
+            letter-spacing:2px;}
+        .verification-toggle{background:none;border:1px solid rgba(0,255,65,.4);color:var(--neon-green);
+            padding:2px 10px;border-radius:4px;cursor:pointer;font-family:'Share Tech Mono',monospace;
+            font-size:.75rem;transition:all .2s;}
+        .verification-toggle:hover{background:rgba(0,255,65,.15);}
+        .verification-content{max-height:160px;overflow-y:auto;margin-top:10px;}
+        .verification-item{font-family:'Share Tech Mono',monospace;color:var(--text-primary);
+            padding:3px 0;border-bottom:1px solid rgba(0,255,65,.08);font-size:.82rem;}
+        .verification-item:last-child{border-bottom:none;}
+        .check-icon{color:var(--neon-green);margin-right:7px;}
+        .error-icon{color:var(--neon-magenta);margin-right:7px;}
+        /* New columns */
+        .bear-col{color:#d4622a;font-family:'Share Tech Mono',monospace;font-weight:700;}
+        .bull-col{color:#3dba6e;font-family:'Share Tech Mono',monospace;font-weight:700;}
+        /* Coin description in modal */
+        .coin-desc{background:rgba(0,240,255,.04);border:1px solid rgba(0,240,255,.2);border-radius:8px;
+            padding:14px 18px;margin-bottom:18px;font-family:'Rajdhani',sans-serif;font-size:1.05rem;
+            color:var(--text-primary);line-height:1.6;border-left:3px solid var(--neon-cyan);}
+        /* Supply info grid */
+        .supply-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px;}
+        .supply-card{background:rgba(0,0,0,.55);border:1px solid rgba(179,0,255,.3);border-radius:8px;padding:14px;}
+        .supply-label{font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--text-secondary);
+            margin-bottom:5px;letter-spacing:1px;text-transform:uppercase;}
+        .supply-value{font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--proj-purple);font-weight:700;}
+        .supply-sub{font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-secondary);margin-top:3px;}
+
+        /* ── MODAL ── */
+        .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+            background:rgba(0,0,0,.94);z-index:200;padding:26px 18px;overflow-y:auto;}
+        .modal.active{display:block;}
+        .modal-content{max-width:1440px;margin:0 auto;background:rgba(6,6,15,.97);
+            border:2px solid var(--neon-cyan);border-radius:14px;padding:32px;position:relative;
+            box-shadow:0 0 60px rgba(0,240,255,.18);}
+        .modal-close{position:absolute;top:18px;right:18px;background:transparent;
+            border:1px solid var(--neon-magenta);color:var(--neon-magenta);padding:7px 16px;
+            border-radius:5px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:.88rem;
+            transition:all .2s;}
+        .modal-close:hover{background:var(--neon-magenta);color:#fff;}
+        .modal-header{margin-bottom:20px;}
+        .modal-title{font-family:'Orbitron',monospace;font-size:1.7rem;color:var(--neon-cyan);margin-bottom:5px;}
+        .modal-sub{font-family:'Share Tech Mono',monospace;font-size:.8rem;color:var(--text-secondary);}
+
+        /* Chart area */
+        .chart-section-label{font-family:'Share Tech Mono',monospace;font-size:.78rem;
+            color:var(--proj-purple);text-align:center;letter-spacing:3px;margin-bottom:8px;
+            text-shadow:0 0 6px var(--proj-purple);}
+        .chart-wrap{background:rgba(0,0,0,.6);border:1px solid rgba(179,0,255,.35);
+            border-radius:10px;padding:18px;margin-bottom:18px;}
+        .chart-legend{display:flex;gap:22px;margin-bottom:12px;font-family:'Share Tech Mono',monospace;
+            font-size:.78rem;flex-wrap:wrap;}
+        .legend-item{display:flex;align-items:center;gap:7px;}
+        .chart-container{height:420px;position:relative;}
+
+        /* Projection breakdown */
+        .proj-breakdown{background:rgba(179,0,255,.05);border:1px solid rgba(179,0,255,.3);
+            border-radius:8px;padding:18px;margin-bottom:18px;}
+        .proj-breakdown-title{font-family:'Orbitron',monospace;color:var(--proj-purple);
+            font-size:.9rem;margin-bottom:14px;letter-spacing:2px;}
+        .proj-row{display:flex;justify-content:space-between;align-items:center;
+            padding:9px 0;border-bottom:1px solid rgba(179,0,255,.12);font-family:'Share Tech Mono',monospace;}
+        .proj-row:last-child{border-bottom:none;}
+        .proj-tf{color:var(--text-secondary);font-size:.82rem;min-width:70px;}
+        .proj-vals{display:flex;gap:18px;align-items:center;}
+        .proj-bear{color:var(--neon-magenta);font-size:.84rem;}
+        .proj-real{color:var(--neon-cyan);font-size:.98rem;font-weight:700;}
+        .proj-bull{color:var(--neon-green);font-size:.84rem;}
+        .proj-price-label{color:var(--text-secondary);font-size:.78rem;}
+
+        /* Metrics */
+        .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(188px,1fr));gap:14px;margin-bottom:18px;}
+        .metric-card{background:rgba(0,0,0,.6);border:1px solid rgba(0,240,255,.25);border-radius:8px;padding:14px;}
+        .metric-label{font-family:'Share Tech Mono',monospace;font-size:.74rem;color:var(--text-secondary);margin-bottom:5px;letter-spacing:1px;}
+        .metric-value{font-family:'Orbitron',monospace;font-size:1.2rem;color:var(--neon-cyan);font-weight:700;}
+
+        @media(max-width:900px){
+            .logo-title{font-size:2.1rem;}
+            .logo-svg{width:62px;height:62px;}
+            table{font-size:.8rem;}
+            th,td{padding:9px 5px;}
+        }
+        @media(max-width:600px){
+            .logo-wrap{flex-direction:column;gap:10px;}
+            .logo-text-block{align-items:center;}
+        }
+    </style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="container">
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header class="header">
+  <div class="logo-wrap">
+
+    <!-- SVG LOGO -->
+    <svg class="logo-svg" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gRing" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00f0ff"/>
+          <stop offset="50%" stop-color="#b300ff"/>
+          <stop offset="100%" stop-color="#ff00ff"/>
+        </linearGradient>
+        <linearGradient id="gCore" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00ff41"/>
+          <stop offset="100%" stop-color="#00f0ff"/>
+        </linearGradient>
+        <radialGradient id="gGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#00f0ff" stop-opacity=".18"/>
+          <stop offset="100%" stop-color="#b300ff" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="fGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2.8" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- Glow backdrop -->
+      <circle cx="55" cy="55" r="52" fill="url(#gGlow)"/>
+
+      <!-- Outer hexagon -->
+      <polygon points="55,5 98,30 98,80 55,105 12,80 12,30"
+        fill="none" stroke="url(#gRing)" stroke-width="3" filter="url(#fGlow)"/>
+
+      <!-- Rotating mid hex (CSS animation) -->
+      <polygon id="hexMid" points="55,18 88,37 88,73 55,92 22,73 22,37"
+        fill="none" stroke="rgba(0,240,255,0.45)" stroke-width="1.5"
+        style="transform-origin:55px 55px;animation:hexSpin 7s linear infinite reverse;"/>
+
+      <!-- Inner hex -->
+      <polygon points="55,28 80,42 80,68 55,82 30,68 30,42"
+        fill="none" stroke="rgba(179,0,255,0.4)" stroke-width="1"/>
+
+      <!-- Big crypto C arc -->
+      <path d="M 70,36 A 22,22 0 1,0 70,74"
+        stroke="url(#gCore)" stroke-width="5" fill="none"
+        stroke-linecap="round" filter="url(#fGlow)"/>
+
+      <!-- Dollar-sign vertical bar through C -->
+      <line x1="55" y1="25" x2="55" y2="36" stroke="#00ff41" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="55" y1="74" x2="55" y2="85" stroke="#00ff41" stroke-width="3.5" stroke-linecap="round"/>
+
+      <!-- Pulsing center node -->
+      <circle cx="55" cy="55" r="5" fill="#00ff41" filter="url(#fGlow)">
+        <animate attributeName="r" values="4;7;4" dur="2.2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="1;.45;1" dur="2.2s" repeatCount="indefinite"/>
+      </circle>
+
+      <!-- Horizontal tick marks -->
+      <line x1="12" y1="47" x2="22" y2="47" stroke="#00f0ff" stroke-width="2"/>
+      <line x1="98" y1="47" x2="88" y2="47" stroke="#00f0ff" stroke-width="2"/>
+      <line x1="12" y1="63" x2="22" y2="63" stroke="#00f0ff" stroke-width="2"/>
+      <line x1="98" y1="63" x2="88" y2="63" stroke="#00f0ff" stroke-width="2"/>
+
+      <!-- Corner accent dots -->
+      <circle cx="55" cy="5"   r="2.5" fill="#00f0ff" opacity=".7"/>
+      <circle cx="55" cy="105" r="2.5" fill="#ff00ff" opacity=".7"/>
+      <circle cx="12" cy="30"  r="2"   fill="#b300ff" opacity=".6"/>
+      <circle cx="98" cy="30"  r="2"   fill="#b300ff" opacity=".6"/>
+      <circle cx="12" cy="80"  r="2"   fill="#b300ff" opacity=".6"/>
+      <circle cx="98" cy="80"  r="2"   fill="#b300ff" opacity=".6"/>
+
+      <!-- Orbit ellipse ring -->
+      <ellipse cx="55" cy="55" rx="34" ry="11" fill="none"
+        stroke="rgba(179,0,255,.38)" stroke-width="1.2"
+        style="transform-origin:55px 55px;animation:orbitSpin 5s linear infinite;"/>
+    </svg>
+
+    <style>
+      @keyframes hexSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+      @keyframes orbitSpin{from{transform:rotateX(68deg) rotate(0)}to{transform:rotateX(68deg) rotate(360deg)}}
+    </style>
+
+    <div class="logo-text-block">
+      <div class="logo-title">CRYPTO ANALYZER</div>
+      <div class="logo-year">2 0 0 0</div>
+    </div>
+  </div>
+  <p class="tagline">Profitability Analysis Matrix &nbsp;·&nbsp; Real-Time Signal Engine</p>
+</header>
+
+<!-- Settings toggle -->
+<button class="settings-toggle" onclick="toggleSettings()" title="Analysis Weights">⚙</button>
+
+<!-- Settings panel -->
+<div class="settings-panel" id="settingsPanel">
+  <h3 style="color:var(--neon-purple);font-family:'Orbitron',monospace;margin-bottom:18px;letter-spacing:2px;font-size:.88rem;">ANALYSIS WEIGHTS</h3>
+  <div class="weight-control">
+    <label class="weight-label">Technical Analysis <span class="weight-value" id="techWeight">40%</span></label>
+    <input type="range" min="0" max="100" value="40" class="weight-slider" oninput="updateWeight('tech',this.value)">
+  </div>
+  <div class="weight-control">
+    <label class="weight-label">Volume Analysis <span class="weight-value" id="volumeWeight">30%</span></label>
+    <input type="range" min="0" max="100" value="30" class="weight-slider" oninput="updateWeight('volume',this.value)">
+  </div>
+  <div class="weight-control">
+    <label class="weight-label">Market Fundamentals <span class="weight-value" id="fundamentalsWeight">20%</span></label>
+    <input type="range" min="0" max="100" value="20" class="weight-slider" oninput="updateWeight('fundamentals',this.value)">
+  </div>
+  <div class="weight-control">
+    <label class="weight-label">Social Sentiment <span class="weight-value" id="socialWeight">5%</span></label>
+    <input type="range" min="0" max="100" value="5" class="weight-slider" oninput="updateWeight('social',this.value)">
+  </div>
+  <div class="weight-control">
+    <label class="weight-label">Development Activity <span class="weight-value" id="devWeight">5%</span></label>
+    <input type="range" min="0" max="100" value="5" class="weight-slider" oninput="updateWeight('dev',this.value)">
+  </div>
+
+  <!-- Amplitude Slider -->
+  <div style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(179,0,255,.3);">
+    <h3 style="color:var(--proj-purple);font-family:'Orbitron',monospace;margin-bottom:14px;letter-spacing:2px;font-size:.88rem;">PREDICTION BIAS</h3>
+    <div class="weight-control">
+      <label class="weight-label" style="color:var(--proj-purple);">
+        Amplitude
+        <span class="weight-value" id="amplitudeLabel" style="color:var(--proj-purple);">NEUTRAL</span>
+      </label>
+      <!-- Bear/bull end labels -->
+      <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:.68rem;margin-bottom:4px;">
+        <span style="color:#ff4488;">◄ BEARISH</span>
+        <span style="color:#8080a0;">NEUTRAL</span>
+        <span style="color:#00ff88;">BULLISH ►</span>
+      </div>
+      <input type="range" min="0" max="100" value="50" class="weight-slider amplitude-slider"
+             id="amplitudeSlider" oninput="updateAmplitude(this.value)">
+      <!-- Tick marks: bear | neutral | bull -->
+      <div style="display:flex;justify-content:space-between;padding:3px 1px 0;font-family:'Share Tech Mono',monospace;font-size:.65rem;color:#4040608;">
+        <span style="color:#ff4488;">0</span>
+        <span style="color:#6060a0;">50</span>
+        <span style="color:#00ff88;">100</span>
+      </div>
+    </div>
+    <div id="amplitudeDesc" style="font-family:'Share Tech Mono',monospace;font-size:.72rem;color:#8080a0;margin-top:6px;line-height:1.5;text-align:center;">
+      No adjustment — model runs on raw signals
+    </div>
+  </div>
+
+  <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,240,255,.18);">
+    <div style="font-family:'Share Tech Mono',monospace;font-size:.70rem;color:var(--text-secondary);line-height:1.65;">
+      ⚡ Weights adjust scoring in real time.<br>Amplitude shifts all projections bullish or bearish.
+    </div>
+  </div>
+</div>
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <div class="status-item"><div class="status-label">System Status</div><div class="status-value" id="systemStatus">INIT</div></div>
+  <div class="status-item"><div class="status-label">Data Source</div><div class="status-value" id="dataSources">—</div></div>
+  <div class="status-item"><div class="status-label">Coins Scanned</div><div class="status-value" id="coinsAnalyzed">—</div></div>
+  <div class="status-item"><div class="status-label">Timeframe</div><div class="status-value" id="timeframeDisplay">1 DAY</div></div>
+  <div class="status-item"><div class="status-label">Last Update</div><div class="status-value" id="lastUpdate">--:--:--</div></div>
+  <div class="status-item"><div class="status-label">Market Trend</div><div class="status-value" id="marketTrend">NEUTRAL</div></div>
+</div>
+
+<!-- Verification Log (collapsible) -->
+<div class="verification-panel" id="verificationPanel">
+  <div class="verification-header" onclick="toggleVerification()">
+    <div class="verification-title">⚡ DATA VERIFICATION LOG</div>
+    <button class="verification-toggle" id="verToggleBtn">MINIMIZE ▲</button>
+  </div>
+  <div class="verification-content" id="verificationContent">
+    <div class="verification-item"><span class="check-icon">◉</span> Initializing data feeds...</div>
+  </div>
+</div>
+
+<!-- Timeframe Filters -->
+<div class="filters">
+  <button class="filter-btn active" onclick="setTimeframe('1d',this)">1 DAY</button>
+  <button class="filter-btn" onclick="setTimeframe('7d',this)">7 DAYS</button>
+  <button class="filter-btn" onclick="setTimeframe('30d',this)">30 DAYS</button>
+  <button class="filter-btn" onclick="setTimeframe('90d',this)">90 DAYS</button>
+  <button class="filter-btn" onclick="setTimeframe('1y',this)">1 YEAR</button>
+  <button class="refresh-btn" onclick="refreshData()">🔄 REFRESH</button>
+</div>
+
+<!-- Loading -->
+<div id="loadingContainer" class="loading">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">SCANNING BLOCKCHAIN MATRIX...</div>
+</div>
+
+<!-- Main Table -->
+<div class="crypto-table" id="cryptoTable" style="display:none;">
+  <table>
+    <thead>
+      <tr>
+        <th onclick="sortBy('rank')">RANK</th>
+        <th onclick="sortBy('name')">ASSET</th>
+        <th onclick="sortBy('confidence')">CONFIDENCE</th>
+        <th onclick="sortBy('price')">PRICE</th>
+        <th onclick="sortBy('change')">24H Δ</th>
+        <th onclick="sortBy('marketCap')">MKT CAP</th>
+        <th onclick="sortBy('volume')">VOL/MCAP</th>
+        <th onclick="sortBy('projected')">PROJ. REALISTIC</th>
+        <th onclick="sortBy('bear')">BEAR CASE</th>
+        <th onclick="sortBy('bull')">BULL CASE</th>
+        <th>ANALYSIS</th>
+      </tr>
+    </thead>
+    <tbody id="cryptoTableBody"></tbody>
+  </table>
+</div>
+
+</div><!-- /container -->
+
+<!-- ═══════════ DETAIL MODAL ═══════════ -->
+<div class="modal" id="detailModal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal()">✕ CLOSE</button>
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle">Asset Details</h2>
+      <p class="modal-sub" id="modalSubtitle"></p>
+    </div>
+
+    <div class="coin-desc" id="coinDesc"></div>
+
+    <div class="chart-section-label" id="chartSectionLabel">◄ HISTORICAL · | · PROJECTED ►</div>
+
+    <div class="chart-wrap">
+      <div class="chart-legend">
+        <div class="legend-item">
+          <span style="display:inline-block;width:26px;height:3px;background:#00f0ff;border-radius:2px;"></span>
+          <span style="color:#00f0ff">Historical Price</span>
+        </div>
+        <div class="legend-item">
+          <span style="display:inline-block;width:26px;height:0;border-top:2.5px dashed #cc44ff;"></span>
+          <span style="color:#cc44ff">Projected — Realistic</span>
+        </div>
+        <div class="legend-item">
+          <span style="display:inline-block;width:26px;height:0;border-top:2px dashed rgba(0,255,136,0.75);"></span>
+          <span style="color:#00ff88">Bull Scenario</span>
+        </div>
+        <div class="legend-item">
+          <span style="display:inline-block;width:26px;height:0;border-top:2px dashed rgba(255,68,136,0.75);"></span>
+          <span style="color:#ff4488">Bear Scenario</span>
+        </div>
+      </div>
+      <div class="chart-container"><canvas id="priceChart"></canvas></div>
+    </div>
+
+    <div class="proj-breakdown" id="projBreakdown"></div>
+    <div class="supply-grid" id="supplyGrid"></div>
+    <div class="metrics-grid" id="metricsGrid"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ╔══════════════════════════════════════╗
+// ║        CRYPTO ANALYZER 2000         ║
+// ║     Complete Analysis Engine        ║
+// ╚══════════════════════════════════════╝
+
+let cryptoData = [];
+let allRawCoins = [];   // full 100-coin dataset for market trend (excl. stablecoins)
+let currentTimeframe = '1d';
+let sortDir = -1, lastSortKey = 'rank';
+let amplitude = 50;    // 0-100, default 50 = neutral. >50 = more bullish, <50 = more bearish
+
+let weights = { tech:40, volume:30, fundamentals:20, social:5, dev:5 };
+
+const COINGECKO = 'https://api.coingecko.com/api/v3';
+
+const TF = {
+  '1d':  { label:'1 Day',   days:1,   maxGain:22,   maxLoss:-18  },
+  '7d':  { label:'7 Days',  days:7,   maxGain:75,   maxLoss:-50  },
+  '30d': { label:'30 Days', days:30,  maxGain:180,  maxLoss:-70  },
+  '90d': { label:'90 Days', days:90,  maxGain:450,  maxLoss:-85  },
+  '1y':  { label:'1 Year',  days:365, maxGain:1800, maxLoss:-90  },
+};
+
+// ── VERIFICATION LOG ──────────────────────────────────────
+function log(msg, ok=true) {
+  const c = document.getElementById('verificationContent');
+  const d = document.createElement('div');
+  d.className = 'verification-item';
+  d.innerHTML = `<span class="${ok?'check-icon':'error-icon'}">${ok?'✓':'✗'}</span> ${msg}`;
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+}
+
+// ── COIN DESCRIPTIONS ─────────────────────────────────────
+const COIN_DESCRIPTIONS = {
+  'bitcoin':          'The original cryptocurrency and digital gold standard. A decentralized peer-to-peer payment network secured by proof-of-work mining. Fixed supply of 21M coins makes it a scarce, inflation-resistant store of value. Largest market cap in crypto.',
+  'ethereum':         'The leading smart contract platform enabling decentralized applications (dApps), DeFi protocols, and NFTs. Transitioned to proof-of-stake in 2022 (The Merge). ETH is used as gas for transactions and staked for network security.',
+  'solana':           'A high-performance Layer-1 blockchain using Proof-of-History consensus. Capable of 65,000+ TPS with sub-second finality and very low fees. Popular for DeFi, NFTs, and consumer applications. Backed by major institutional investors.',
+  'ripple':           'XRP powers RippleNet, a global payment settlement and remittance network used by banks and financial institutions. Designed for fast cross-border payments with 3-5 second settlement. Subject to ongoing SEC regulatory action.',
+  'cardano':          'A research-driven proof-of-stake blockchain founded by Ethereum co-founder Charles Hoskinson. Emphasizes peer-reviewed development and formal verification. ADA used for staking, governance, and smart contracts via the Plutus platform.',
+  'binancecoin':      'Native token of the Binance ecosystem — the world\'s largest crypto exchange. Used for trading fee discounts, BNB Chain gas, DeFi, and token launches. Regular token burns reduce supply. Tightly integrated with Binance Smart Chain.',
+  'avalanche-2':      'A Layer-1 platform with three specialized chains (C-Chain, P-Chain, X-Chain) enabling sub-second finality. Supports EVM-compatible smart contracts and allows businesses to create custom subnets. Strong institutional partnerships.',
+  'polkadot':         'A multi-chain network enabling blockchain interoperability through parachains. DOT is used for governance, staking, and bonding to secure parachain slots. Created by Ethereum co-founder Gavin Wood. Focuses on cross-chain communication.',
+  'chainlink':        'The leading decentralized oracle network connecting blockchains to real-world data, APIs, and payment systems. LINK is used to pay node operators for data delivery. Powers the majority of DeFi protocols requiring external price feeds.',
+  'near':             'A developer-friendly Layer-1 blockchain with a unique sharding approach (Nightshade). Offers human-readable account names, low fees, and fast transactions. Focus on onboarding Web2 developers into Web3. Strong VC backing.',
+  'cosmos':           'The "Internet of Blockchains" — a modular framework for building interoperable blockchains using the Cosmos SDK and IBC protocol. ATOM is staked for security and governance. Hosts hundreds of interconnected app-specific chains.',
+  'algorand':         'A pure proof-of-stake Layer-1 blockchain focused on speed, security, and decentralization. Created by MIT professor Silvio Micali. Used by governments and enterprises for CBDCs and digital assets. Fast finality with minimal energy use.',
+  'stellar':          'An open-source payment network designed for fast, cheap cross-border transfers and asset tokenization. Partners with MoneyGram and IBM. XLM is used as a bridge currency. Non-profit Stellar Development Foundation oversees development.',
+  'tron':             'A high-throughput blockchain focused on digital content and entertainment. Dominates USDT transaction volume. Originally a content-sharing platform, now a major DeFi hub. Founded by Justin Sun. Delegated proof-of-stake consensus.',
+  'uniswap':          'The leading decentralized exchange (DEX) protocol on Ethereum. Uses an automated market maker (AMM) model. UNI token holders govern protocol upgrades and fee structures. Pioneered the modern DeFi liquidity pool model.',
+  'litecoin':         'One of the earliest Bitcoin alternatives — "digital silver" to Bitcoin\'s gold. Faster block times (2.5 min) and lower fees. Uses Scrypt PoW mining. MimbleWimble privacy extension added in 2022. Widely accepted by merchants.',
+  'dogecoin':         'Originally a meme coin based on the Shiba Inu internet meme. Gained mainstream attention through Elon Musk and celebrity endorsements. Inflationary supply model. Strong community backing and increasing merchant acceptance.',
+  'shiba-inu':        'An Ethereum-based meme token inspired by Dogecoin. Includes the ShibaSwap DEX, LEASH and BONE tokens. The Shiba Inu ecosystem is expanding into Layer-2 (Shibarium) and gaming. Massive retail community.',
+  'polygon':          'A Layer-2 scaling solution for Ethereum providing fast, cheap transactions while inheriting Ethereum security. MATIC used for gas and staking. Transitioning to POL token. Hosts thousands of dApps and major brand partnerships.',
+  'hedera':           'An enterprise-grade public distributed ledger governed by a council of global corporations (Google, IBM, Boeing). Uses Hashgraph consensus for high throughput (10,000+ TPS). HBAR used for network fees and staking.',
+  'aptos':            'A next-generation Layer-1 blockchain built by ex-Meta (Diem) engineers. Uses the Move programming language for smart contracts. Designed for safety, scalability, and reliability. Backed by a16z and other major VCs.',
+  'optimism':         'An Ethereum Layer-2 scaling solution using optimistic rollup technology. Reduces gas costs by 10-100x while inheriting Ethereum\'s security. OP token used for governance. Part of the "Superchain" vision with Coinbase\'s Base.',
+  'arbitrum':         'The largest Ethereum Layer-2 by TVL. Uses optimistic rollup technology for low-cost, fast Ethereum-compatible transactions. ARB token governs the Arbitrum DAO. Major DeFi protocols have deployed on Arbitrum.',
+  'injective-protocol':'A Layer-1 DeFi-focused blockchain built on the Cosmos SDK. Provides a fully decentralized derivatives and spot trading infrastructure. INJ used for governance and staking. Zero gas fees on its native DEX.',
+  'sui':              'A next-gen Layer-1 blockchain by ex-Meta engineers using the Move language. Designed for horizontal scalability with object-centric data model. Fast parallel transaction execution. Strong institutional backing from a16z and FTX Ventures.',
+  'toncoin':          'The Open Network — originally developed by Telegram. Fast, scalable blockchain integrated with Telegram\'s 800M+ user base. TON used for payments, dApps, and storage. Growing ecosystem driven by Telegram\'s massive reach.',
+  'monero':           'The leading privacy-focused cryptocurrency. Uses ring signatures, stealth addresses, and RingCT to make transactions untraceable. XMR has fixed tail emission after initial supply. Popular for privacy-conscious users.',
+  'internet-computer':'A decentralized cloud computing platform by DFINITY. Hosts smart contracts at web speed with zero gas fees for end users. ICP enables fully on-chain dApps, websites, and enterprise software. Unique "canister" smart contract model.',
+  'fetch-ai':         'An AI and autonomous agents platform built on the Cosmos SDK. FET token powers the AI economy — used to create and transact with AI agents. Merged with Ocean Protocol and SingularityNET into the ASI Alliance.',
+  'render-token':     'A decentralized GPU computing network for 3D rendering, AI, and machine learning. RNDR connects GPU providers with creators. Migrated to Solana for improved speed. Strong ties to the Metaverse and generative AI industry.',
+};
+
+function getCoinDescription(coinId) {
+  return COIN_DESCRIPTIONS[coinId] || 
+    `${coinId.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase())} is a cryptocurrency trading on the digital asset market. Analysis based on real-time market data including price action, volume, technical indicators, and market capitalization metrics.`;
+}
+
+// ── TEAM / OPERATOR HOLDINGS ─────────────────────────────
+/*
+  Sources: public tokenomics papers, CoinGecko, Messari, SEC filings,
+  official foundation reports, CryptoRank, Token Unlocks, public audits.
+  All figures are ESTIMATES from publicly available data as of 2024-2025.
+  "Team" includes: founding team, company treasury, foundation, early investors
+  with lock-ups, NOT counting public sale or community allocations.
+*/
+const TEAM_OWNERSHIP = {
+  // ── PROOF-OF-WORK / MINED ─────────────────────────────
+  'bitcoin':          { pct:'~1%',   note:'Satoshi ~1M BTC unmoved; no ongoing team allocation' },
+  'litecoin':         { pct:'~3%',   note:'Charlie Lee sold most holdings; LTC Foundation minimal' },
+  'monero':           { pct:'~1%',   note:'No pre-mine; community dev fund ~1% from tail emission' },
+  'dogecoin':         { pct:'~2%',   note:'No pre-mine; founders sold early; top wallets unknown' },
+  'ethereum-classic': { pct:'~5%',   note:'ETC Labs development fund; no formal allocation' },
+  'ravencoin':        { pct:'<1%',   note:'Fair launch, no pre-mine, no ICO' },
+  'kaspa':            { pct:'~2%',   note:'Fair launch; small developer fund via ongoing emission' },
+
+  // ── ETHEREUM ECOSYSTEM ────────────────────────────────
+  'ethereum':         { pct:'~10%',  note:'Ethereum Foundation holds ~300K ETH; early devs ~5%' },
+  'shiba-inu':        { pct:'~5%',   note:'Ryoshi burned 50% to Vitalik; remaining team wallets' },
+  'uniswap':          { pct:'~21%',  note:'Team 21.5% (4yr vest); Investors 18%; Community 60%' },
+  'chainlink':        { pct:'~35%',  note:'Smartcontract.com team reserve; node operator fund' },
+  'aave':             { pct:'~13%',  note:'Aave Ltd team allocation; ecosystem reserve 15%' },
+  'maker':            { pct:'~17%',  note:'Maker Foundation dissolved; DAO treasury 18%' },
+  'compound-governance-token': { pct:'~25%', note:'Compound Labs + early investors allocated 25%' },
+  'lido-dao':         { pct:'~32%',  note:'Lido team + investors 32%; DAO treasury 15%' },
+  'curve-dao-token':  { pct:'~10%',  note:'Team 10% (2yr vest); early users/LPs 30%' },
+  'convex-finance':   { pct:'~10%',  note:'Core team ~10%; majority distributed to CVX stakers' },
+  'balancer':         { pct:'~25%',  note:'Balancer Labs 25%; ecosystem fund 25%' },
+  'synthetix-network-token': { pct:'~20%', note:'Synthetix team 20% (vested); inflationary staking rewards' },
+  'yearn-finance':    { pct:'~6%',   note:'No pre-mine; André Cronje fair launch; DAO controls treasury' },
+  '1inch':            { pct:'~23%',  note:'1inch Foundation + team 23% (4yr vest)' },
+  'the-graph':        { pct:'~17%',  note:'Edge & Node (dev org) 17%; Indexer rewards separate' },
+  'ens':              { pct:'~18%',  note:'ENS Foundation + early contributors ~18%; community 50%' },
+  'immutable-x':      { pct:'~25%',  note:'Immutable team + investors 25%; ecosystem fund 25%' },
+  'arbitrum':         { pct:'~27%',  note:'Offchain Labs 27%; investor DAOs 17%; community 56%' },
+  'optimism':         { pct:'~19%',  note:'OP Labs 19%; investors 17%; user/RetroPGF 64%' },
+  'starknet':         { pct:'~32%',  note:'StarkWare investors 17% + core contributors 32%' },
+  'polygon':          { pct:'~19%',  note:'Founders 22%; team 16%; Polygon Foundation' },
+  'matic-network':    { pct:'~19%',  note:'Same as MATIC/POL — founders + team ~19%' },
+
+  // ── LAYER 1 SMART CONTRACT PLATFORMS ─────────────────
+  'solana':           { pct:'~28%',  note:'Solana Labs + Foundation 28%; insiders 38% total incl investors' },
+  'cardano':          { pct:'~12%',  note:'IOHK 10%; Cardano Foundation 7%; Emurgo 5%' },
+  'avalanche-2':      { pct:'~21%',  note:'Ava Labs 9.26%; Avalanche Foundation 9.26%; seed investors' },
+  'polkadot':         { pct:'~30%',  note:'Web3 Foundation 30%; Parity Technologies team' },
+  'near':             { pct:'~18%',  note:'NEAR Foundation 10%; core team 14%; investors 12%' },
+  'cosmos':           { pct:'~15%',  note:'All In Bits (Tendermint) + Interchain Foundation 15%' },
+  'algorand':         { pct:'~25%',  note:'Algorand Foundation + Algorand Inc ~25%; relay node runners' },
+  'tron':             { pct:'~34%',  note:'Justin Sun + TRON Foundation hold large reserve' },
+  'stellar':          { pct:'~8%',   note:'SDF holds ~5B XLM operational reserve (8% of supply)' },
+  'toncoin':          { pct:'~2%',   note:'TON Foundation ~2%; majority community/validator distributed' },
+  'hedera':           { pct:'~12%',  note:'Hedera Governing Council treasury; HBAR Foundation' },
+  'aptos':            { pct:'~51%',  note:'Aptos Labs 19% + Aptos Foundation 16.5% + investors 16%' },
+  'sui':              { pct:'~52%',  note:'Mysten Labs 20% + investors 14% + Sui Foundation 10%' },
+  'injective-protocol':{ pct:'~36%', note:'Injective Labs + investors 36% (private + seed rounds)' },
+  'sei-network':      { pct:'~48%',  note:'Sei Labs + investors + foundation ~48% at launch' },
+  'mantle':           { pct:'~50%',  note:'BitDAO/Mantle treasury controlled by Bybit; core team' },
+  'celestia':         { pct:'~50%',  note:'Celestia Labs + investors 50%; public 50% over 5yr vest' },
+  'internet-computer': { pct:'~25%', note:'DFINITY Foundation 23.9%; early contributors ~5%' },
+  'flow':             { pct:'~20%',  note:'Dapper Labs 20%; ecosystem fund 32%' },
+  'tezos':            { pct:'~10%',  note:'Tezos Foundation 8%; Arthur/Kathleen Breitman ~2%' },
+  'neo':              { pct:'~50%',  note:'Neo Global Development holds 50% in cold storage' },
+  'waves':            { pct:'~28%',  note:'Sasha Ivanov + Waves Association ~28%' },
+  'harmony':          { pct:'~22%',  note:'Harmony Foundation + team 22%; investors 12%' },
+  'celo':             { pct:'~26%',  note:'cLabs + Celo Foundation 26%; investors 20%' },
+  'zilliqa':          { pct:'~18%',  note:'Zilliqa Research 11%; seed investors 7%' },
+  'ontology':         { pct:'~30%',  note:'Ontology team + foundation 30% of NEP-5 allocation' },
+  'vechain':          { pct:'~25%',  note:'VeChain Foundation + enterprise reserve 25%' },
+  'icon':             { pct:'~20%',  note:'ICON Foundation 20%; community 80%' },
+  'qtum':             { pct:'~20%',  note:'Qtum Foundation + team 20%; early investors 10%' },
+  'theta-token':      { pct:'~30%',  note:'Theta Labs + SLIVER.tv + Samsung ~30%' },
+  'eos':              { pct:'~10%',  note:'Block.one surrendered to community; B1 holds ~10%' },
+
+  // ── EXCHANGE / INFRA TOKENS ───────────────────────────
+  'binancecoin':      { pct:'~40%',  note:'Binance reserve treasury; BNB burn program ongoing' },
+  'crypto-com-chain': { pct:'~35%',  note:'Crypto.com company reserve ~35%; team allocation 10%' },
+  'okb':              { pct:'~60%',  note:'OKX exchange holds majority; limited public float' },
+  'huobi-token':      { pct:'~55%',  note:'HTX/Huobi team holds majority; low public float' },
+  'kucoin-shares':    { pct:'~50%',  note:'KuCoin team + early investors 50%' },
+  'ftx-token':        { pct:'~N/A',  note:'FTX collapsed; tokens valueless' },
+  'leo-token':        { pct:'~65%',  note:'iFinex (Bitfinex parent) holds majority of LEO' },
+
+  // ── DeFi / DEFI INFRA ─────────────────────────────────
+  'usd-coin':         { pct:'N/A',   note:'Stablecoin — excluded from analysis' },
+  'dai':              { pct:'N/A',   note:'Stablecoin — excluded from analysis' },
+  'pancakeswap-token':{ pct:'~15%',  note:'PancakeSwap team treasury 15%; community farming 85%' },
+  'sushiswap':        { pct:'~10%',  note:'Dev fund 10% of emissions; originally no pre-mine (migrated)' },
+  'dydx':             { pct:'~27%',  note:'dYdX team 27%; investors 28%; community 45%' },
+  'gmx':              { pct:'~15%',  note:'GMX team allocation ~15%; floor price fund; no VC investors' },
+  'jupiter-exchange-solana': { pct:'~20%', note:'Metropolis team 20%; community 70%; strategic 10%' },
+  'jito-governance-token':   { pct:'~25%', note:'Jito Labs + investors 25%; community airdrop 75%' },
+  'raydium':          { pct:'~25%',  note:'Raydium team 20%; seed investors 5%; liquidity mining 75%' },
+
+  // ── CROSS-CHAIN / BRIDGE ──────────────────────────────
+  'thorchain':        { pct:'~10%',  note:'Fair launch; dev fund 10% of block rewards' },
+  'wormhole':         { pct:'~35%',  note:'Jump Crypto + investors 35%; community ~45%' },
+  'layerzero':        { pct:'~32%',  note:'LayerZero Labs + investors 32%' },
+
+  // ── AI / DATA / ORACLE ────────────────────────────────
+  'fetch-ai':         { pct:'~30%',  note:'Fetch.ai Ltd + Bosch + investors ~30%' },
+  'render-token':     { pct:'~20%',  note:'OTOY/Jules Urbach + seed investors ~20%' },
+  'ocean-protocol':   { pct:'~25%',  note:'Ocean Protocol Foundation 25%; network rewards 51%' },
+  'singularitynet':   { pct:'~20%',  note:'SingularityNET Foundation + Ben Goertzel team ~20%' },
+  'bittensor':        { pct:'~12%',  note:'Opentensor Foundation; no VC raise; founder pre-mine ~12%' },
+  'worldcoin-wld':    { pct:'~75%',  note:'Tools for Humanity + investors hold ~75%; user allocation 25%' },
+  'rndr':             { pct:'~20%',  note:'OTOY Inc + seed investors; Render Foundation' },
+  'band-protocol':    { pct:'~25%',  note:'Band Protocol Foundation + team 25%' },
+
+  // ── GAMING / NFT / METAVERSE ──────────────────────────
+  'decentraland':     { pct:'~20%',  note:'Decentraland Foundation + team 20%; auction proceeds' },
+  'the-sandbox':      { pct:'~26%',  note:'Animoca Brands + TSB team 26%; ecosystem 22%' },
+  'axie-infinity':    { pct:'~21%',  note:'Sky Mavis team 21%; advisors 7%; community 70%' },
+  'gala':             { pct:'~26%',  note:'Gala Games founders + investors ~26%' },
+  'illuvium':         { pct:'~15%',  note:'Illuvium team 10% (2yr vest); investors 5%' },
+  'pixels':           { pct:'~30%',  note:'Pixels team + investors 30%; community play-to-earn 70%' },
+
+  // ── PRIVACY ──────────────────────────────────────────
+  'zcash':            { pct:'~10%',  note:'Electric Coin Company receives ~10% via Founders Reward (ended)' },
+  'dash':             { pct:'~5%',   note:'No pre-mine; Dash Core Group funded by treasury proposals' },
+  'oasis-network':    { pct:'~23%',  note:'Oasis Foundation + backers 23%; staking rewards' },
+  'secret':           { pct:'~18%',  note:'SCRT Labs + investors 18%; genesis airdrop' },
+
+  // ── STAKING / LIQUID STAKING ─────────────────────────
+  'rocket-pool':      { pct:'~10%',  note:'Rocket Pool team 10%; no VC investors; fair launch' },
+  'frax-share':       { pct:'~20%',  note:'Frax Finance core team ~20%; genesis allocation' },
+  'staked-ether':     { pct:'N/A',   note:'Lido stETH — derivative token, not issuer-owned' },
+
+  // ── MEME / SOCIAL ─────────────────────────────────────
+  'pepe':             { pct:'~6%',   note:'Anonymous team; ~6% held in deployer wallets (estimated)' },
+  'floki':            { pct:'~5%',   note:'FLOKI community-driven; core team wallets ~5%' },
+  'bonk':             { pct:'~15%',  note:'Community airdrop 50%; dev fund + insiders ~15%' },
+  'wif-dogwifhat':    { pct:'~5%',   note:'Anonymous memecoin; deployer wallets estimated ~5%' },
+};
+
+function getTeamOwnership(coinId) {
+  const d = TEAM_OWNERSHIP[coinId];
+  if (!d) return { pct: 'Not disclosed', note: 'No public tokenomics data found for this coin' };
+  return d;
+}
+
+// ── TOGGLE VERIFICATION ───────────────────────────────────
+function toggleVerification() {
+  const panel = document.getElementById('verificationPanel');
+  const btn   = document.getElementById('verToggleBtn');
+  panel.classList.toggle('minimized');
+  btn.textContent = panel.classList.contains('minimized') ? 'EXPAND ▼' : 'MINIMIZE ▲';
+}
+
+// ── INIT ──────────────────────────────────────────────────
+async function initializeApp() {
+  document.getElementById('systemStatus').textContent = 'CONNECTING';
+  document.getElementById('loadingContainer').style.display = 'block';
+  setLoadingMsg('SCANNING BLOCKCHAIN MATRIX...');
+  document.getElementById('cryptoTable').style.display = 'none';
+  try {
+    await fetchCryptoData();
+  } catch(e) {
+    document.getElementById('systemStatus').textContent = 'ERROR';
+    log('Load failed: ' + e.message, false);
+    let secs = 30;
+    document.getElementById('loadingContainer').innerHTML =
+      `<div style="color:var(--neon-magenta);font-family:'Share Tech Mono',monospace;padding:40px 20px;font-size:.88rem;line-height:1.9;text-align:center;">
+       <div style="font-size:2.2rem;margin-bottom:12px;">⚠</div>
+       <div style="color:#ff6688;font-size:1rem;font-weight:700;margin-bottom:8px;">DATA FEED ERROR</div>
+       <div style="color:#c0a0b0;max-width:520px;margin:0 auto;font-size:.82rem;">${e.message}</div><br>
+       <button onclick="retryLoad()" style="background:linear-gradient(135deg,#00f0ff,#b300ff);border:none;color:#fff;
+         padding:12px 32px;border-radius:6px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:.9rem;
+         letter-spacing:1px;box-shadow:0 0 18px rgba(0,240,255,.4);">↺ RETRY NOW</button>
+       <div style="color:#6060a0;font-size:.76rem;margin-top:10px;">Auto-retry in <span id="retryCountdown">${secs}</span>s</div>
+       </div>`;
+    const cd = setInterval(() => {
+      secs--;
+      const el = document.getElementById('retryCountdown');
+      if (el) el.textContent = secs;
+      if (secs <= 0) { clearInterval(cd); retryLoad(); }
+    }, 1000);
+  }
+}
+
+function setLoadingMsg(msg, sub='') {
+  document.getElementById('loadingContainer').innerHTML =
+    `<div class="loading-spinner"></div>
+     <div class="loading-text">${msg}</div>
+     ${sub ? `<div style="font-family:'Share Tech Mono',monospace;color:#6060a0;font-size:.78rem;margin-top:10px;">${sub}</div>` : ''}`;
+}
+
+function retryLoad() {
+  document.getElementById('verificationContent').innerHTML =
+    '<div class="verification-item"><span class="check-icon">◉</span> Retrying...</div>';
+  initializeApp();
+}
+
+// ── FETCH WITH TIMEOUT ────────────────────────────────────
+async function timedFetch(url, ms) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    // No custom headers = simple CORS request (no preflight), works on more endpoints
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(t);
+    return r;
+  } catch(e) {
+    clearTimeout(t);
+    if (e.name === 'AbortError') throw new Error(`Timeout (${ms/1000}s)`);
+    throw e;
+  }
+}
+
+async function tryParseCoins(r) {
+  // Safe JSON parse — CoinGecko sometimes returns HTML rate-limit pages
+  const text = await r.text();
+  if (text.trim().startsWith('<')) throw new Error('Got HTML instead of JSON (rate limited or error page)');
+  const d = JSON.parse(text);
+  if (d && d.status && d.status.error_message) throw new Error('CoinGecko: ' + d.status.error_message);
+  if (Array.isArray(d) && d.length > 0) return d;
+  throw new Error('Unexpected JSON shape: ' + text.slice(0,80));
+}
+
+// ── MULTI-SOURCE DATA FETCH ───────────────────────────────
+async function fetchCryptoData() {
+  const ts = Date.now(); // cache-buster
+  const CG_PATH = `coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h%2C24h%2C7d%2C30d%2C1y&_=${ts}`;
+  const DIRECT  = `https://api.coingecko.com/api/v3/${CG_PATH}`;
+  // allorigins /raw/ returns the raw response body directly (no wrapper object)
+  const PROXY1  = `https://api.allorigins.win/raw?url=${encodeURIComponent(DIRECT)}`;
+  // corsproxy.io prepends itself to the target URL
+  const PROXY2  = `https://corsproxy.io/?${encodeURIComponent(DIRECT)}`;
+  // thingproxy as final fallback
+  const PROXY3  = `https://thingproxy.freeboard.io/fetch/${DIRECT}`;
+
+  let coins = null;
+
+  // ── Attempt 1: Direct ──────────────────────────────────
+  setLoadingMsg('SCANNING BLOCKCHAIN MATRIX...', 'Connecting to CoinGecko...');
+  log('Attempt 1/4 — Direct CoinGecko API...');
+  try {
+    const r = await timedFetch(DIRECT, 8000);
+    if (r.ok) { coins = await tryParseCoins(r); log('✔ Direct connection succeeded'); }
+    else { log(`Direct: HTTP ${r.status} — trying proxy`, false); }
+  } catch(e) { log(`Direct failed (${e.message}) — trying proxy 1`, false); }
+
+  // ── Attempt 2: allorigins /raw/ ──────────────────────
+  if (!coins) {
+    setLoadingMsg('SCANNING BLOCKCHAIN MATRIX...', 'Trying CORS proxy 1...');
+    log('Attempt 2/4 — allorigins.win/raw proxy...');
+    try {
+      const r = await timedFetch(PROXY1, 10000);
+      if (r.ok) { coins = await tryParseCoins(r); log('✔ Proxy 1 (allorigins) succeeded'); }
+      else { log(`Proxy 1: HTTP ${r.status}`, false); }
+    } catch(e) { log(`Proxy 1 failed (${e.message})`, false); }
+  }
+
+  // ── Attempt 3: corsproxy.io ──────────────────────────
+  if (!coins) {
+    setLoadingMsg('SCANNING BLOCKCHAIN MATRIX...', 'Trying CORS proxy 2...');
+    log('Attempt 3/4 — corsproxy.io proxy...');
+    try {
+      const r = await timedFetch(PROXY2, 10000);
+      if (r.ok) { coins = await tryParseCoins(r); log('✔ Proxy 2 (corsproxy.io) succeeded'); }
+      else { log(`Proxy 2: HTTP ${r.status}`, false); }
+    } catch(e) { log(`Proxy 2 failed (${e.message})`, false); }
+  }
+
+  // ── Attempt 4: thingproxy ────────────────────────────
+  if (!coins) {
+    setLoadingMsg('SCANNING BLOCKCHAIN MATRIX...', 'Trying CORS proxy 3...');
+    log('Attempt 4/4 — thingproxy fallback...');
+    try {
+      const r = await timedFetch(PROXY3, 12000);
+      if (r.ok) { coins = await tryParseCoins(r); log('✔ Proxy 3 (thingproxy) succeeded'); }
+      else { log(`Proxy 3: HTTP ${r.status}`, false); }
+    } catch(e) { log(`Proxy 3 failed (${e.message})`, false); }
+  }
+
+  if (!coins) {
+    throw new Error(
+      'All 4 data sources failed. Possible causes: (1) CoinGecko rate-limit — wait 60s and retry. ' +
+      '(2) No internet connection. (3) Corporate/VPN firewall blocking external APIs. ' +
+      'Check the verification log above for specific error messages.'
+    );
+  }
+
+  log(`✔ ${coins.length} raw coins loaded`);
+
+  // ── FILTER: exclude stablecoins (USD-pegged) and zero-volume coins ──
+  const STABLECOIN_IDS = new Set([
+    'tether','usd-coin','binance-usd','dai','true-usd','frax','usdd','gemini-dollar',
+    'pax-dollar','liquity-usd','fei-usd','origin-dollar','nusd','vai','dollar-on-chain',
+    'husd','usdk','musd','susd','usdn','eusd','usdt','usdc','busd','usdp','gusd','lusd',
+    'frax','usdx','zusd','cusd','eurs','stasis-eurs','ageur','cadc','xsgd','alusd','dola',
+    'celo-dollar','reserve','rai','float-protocol-bank'
+  ]);
+  const STABLECOIN_SYMBOLS = new Set(['USDT','USDC','BUSD','DAI','FRAX','TUSD','USDP','GUSD','LUSD','USDD','USDN','CUSD','EUSD','SUSD','MUSD','HUSD']);
+
+  const filtered = coins.filter(c => {
+    // Always keep Bitcoin regardless of any filter
+    if (c.id === 'bitcoin') return true;
+    if (!c.current_price || c.current_price <= 0) return false;
+    if (!c.total_volume || c.total_volume <= 0) return false;
+    if (STABLECOIN_IDS.has(c.id)) return false;
+    if (STABLECOIN_SYMBOLS.has((c.symbol||'').toUpperCase())) return false;
+    // Price between $0.999 and $1.001 with very low 24h change = likely stablecoin
+    if (c.current_price >= 0.995 && c.current_price <= 1.005 &&
+        Math.abs(c.price_change_percentage_24h||0) < 0.5) return false;
+    return true;
+  });
+
+  log(`✔ ${coins.length} coins received → ${filtered.length} after filtering stablecoins & zero-volume coins`);
+  log(`Sample: ${filtered[0].name} @ $${fmtNum(filtered[0].current_price)} | MCap $${fmtLarge(filtered[0].market_cap)}`);
+
+  document.getElementById('dataSources').textContent = 'CoinGecko';
+  document.getElementById('coinsAnalyzed').textContent = `${filtered.length}→25`;
+  document.getElementById('systemStatus').textContent = 'ANALYZING';
+
+  // Store full filtered set for market trend (uses all ~80-90 non-stable coins)
+  allRawCoins = filtered;
+
+  cryptoData = filtered.map((c,i) => processOne(c, i));
+
+  // Top scored coin verification
+  const top = cryptoData.slice().sort((a,b)=>b.confidenceScore-a.confidenceScore)[0];
+  log(`Score check — top: ${top.name} ${top.confidenceScore}/100 | Tech:${Math.round(top.technicalScore)} Vol:${Math.round(top.volumeScore)} Fund:${Math.round(top.fundamentalScore)}`);
+
+  // Formula check
+  const p = top.allProj['1d'];
+  log(`Projection formula check (${top.symbol}, 1d): realistic=${p.realistic}% | bull=${p.bull}% | bear=${p.bear}%`);
+  log(`1y projection (${top.symbol}): realistic=${top.allProj['1y'].realistic}% → $${fmtNum(top.allProj['1y'].projPrice)}`);
+
+  cryptoData.sort((a,b)=>b.confidenceScore-a.confidenceScore);
+  cryptoData = cryptoData.slice(0,25);
+  cryptoData.forEach((c,i)=>c.rank=i+1);
+
+  log(`✔ Top 25 ranked: #1=${cryptoData[0].name}(${cryptoData[0].confidenceScore}) #25=${cryptoData[24].name}(${cryptoData[24].confidenceScore})`);
+
+  document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+  document.getElementById('systemStatus').textContent = 'ACTIVE';
+  updateMarketTrend();
+  renderTable();
+  document.getElementById('loadingContainer').style.display = 'none';
+  document.getElementById('cryptoTable').style.display = 'block';
+  // Auto-minimize verification log after successful load
+  setTimeout(() => {
+    const panel = document.getElementById('verificationPanel');
+    const btn   = document.getElementById('verToggleBtn');
+    if (panel && !panel.classList.contains('minimized')) {
+      panel.classList.add('minimized');
+      if (btn) btn.textContent = 'EXPAND ▼';
+    }
+  }, 2000);
+}
+
+// ── PROCESS COIN ──────────────────────────────────────────
+function processOne(coin, idx) {
+  const prices = coin.sparkline_in_7d?.price || [];
+  const tech   = scoreTech(coin, prices);
+  const vol    = scoreVol(coin);
+  const fund   = scoreFund(coin);
+  const soc    = scoreSocial(coin);
+  const dev    = scoreDev(coin);
+  const conf   = weightedScore(tech, vol, fund, soc, dev);
+  const rsi    = calcRSI(prices);
+  const macd   = calcMACD(prices);
+  const allProj = {};
+  for (const tf of Object.keys(TF)) allProj[tf] = project(coin, prices, conf, tf);
+
+  return {
+    id:coin.id, symbol:coin.symbol.toUpperCase(), name:coin.name, image:coin.image,
+    currentPrice:coin.current_price,
+    priceChange24h:coin.price_change_percentage_24h||0,
+    priceChange7d:coin.price_change_percentage_7d_in_currency||0,
+    marketCap:coin.market_cap,
+    fullyDilutedMcap: coin.fully_diluted_valuation || null,
+    volume24h:coin.total_volume,
+    volumeToMcap:+((coin.total_volume/coin.market_cap)*100).toFixed(2),
+    circulatingSupply: coin.circulating_supply || null,
+    totalSupply: coin.total_supply || null,
+    maxSupply: coin.max_supply || null,
+    ath: coin.ath || null,
+    athChangePercent: coin.ath_change_percentage || null,
+    high24h: coin.high_24h || coin.current_price,
+    low24h:  coin.low_24h  || coin.current_price,
+    sparkline:prices,
+    confidenceScore:Math.round(conf),
+    technicalScore:tech, volumeScore:vol, fundamentalScore:fund, socialScore:soc, devScore:dev,
+    rsi, macd, allProj, rank:idx+1,
+    // Raw fields needed by project() so amplitude recalc works on processed coins
+    current_price: coin.current_price,
+    market_cap: coin.market_cap,
+    price_change_percentage_7d_in_currency: coin.price_change_percentage_7d_in_currency||0,
+    ath_change_percentage: coin.ath_change_percentage||0,
+    circulating_supply: coin.circulating_supply||null,
+    total_supply: coin.total_supply||null,
+  };
+}
+
+// ── INDICATORS ────────────────────────────────────────────
+function calcRSI(p, period=14) {
+  if (!p||p.length<period+1) return 50;
+  let g=0,l=0;
+  for (let i=p.length-period;i<p.length;i++){const d=p[i]-p[i-1];d>0?g+=d:l-=d;}
+  const ag=g/period,al=l/period;
+  if(al===0) return 100;
+  return 100-(100/(1+ag/al));
+}
+function calcEMA(p, period) {
+  if(!p||!p.length) return 0;
+  const k=2/(period+1); let e=p[0];
+  for(let i=1;i<p.length;i++) e=p[i]*k+e*(1-k);
+  return e;
+}
+function calcMACD(p) {
+  if(!p||p.length<26) return {trend:'neutral',value:0};
+  const v=calcEMA(p,12)-calcEMA(p,26);
+  return {value:v,trend:v>0?'bullish':'bearish'};
+}
+function calcVol(p) {
+  if(!p||p.length<2) return 0.01;
+  const r=[];
+  for(let i=1;i<p.length;i++) r.push((p[i]-p[i-1])/p[i-1]);
+  const m=r.reduce((a,b)=>a+b,0)/r.length;
+  return Math.sqrt(r.reduce((s,x)=>s+Math.pow(x-m,2),0)/r.length);
+}
+
+// ── SCORING ───────────────────────────────────────────────
+function weightedScore(t,v,f,s,d){
+  return (t*weights.tech+v*weights.volume+f*weights.fundamentals+s*weights.social+d*weights.dev)/100;
+}
+
+/*
+  SCORING PHILOSOPHY — Best Practices:
+  ─────────────────────────────────────
+  Target distribution for top-100 real coins:
+    • Elite (BTC/ETH in strong uptrend):  75-88
+    • Strong signal:                      62-74
+    • Moderate / hold:                    48-61
+    • Weak / cautious:                    34-47
+    • Poor:                               <34
+
+  Key rules:
+  1. Start each sub-score from a meaningful baseline (~35-45), not 0 or 50
+  2. Good conditions add up to ~+30; bad conditions subtract ~-20
+  3. No single metric dominates — all 5 sub-scores should regularly produce
+     values in the 30-80 range so weighting actually differentiates coins
+  4. Vol/MCap of 3-8% (typical large-cap) should score ~50, not penalized
+*/
+function scoreTech(coin, p) {
+  if (!p || !p.length) return 45;
+  const rsi  = calcRSI(p);
+  const macd = calcMACD(p);
+  let sc = 42; // neutral baseline
+
+  // RSI — mean reversion + momentum signal
+  if      (rsi < 25) sc += 28;  // deeply oversold — strong buy signal
+  else if (rsi < 35) sc += 18;
+  else if (rsi < 45) sc +=  9;
+  else if (rsi > 75) sc -= 20;  // overbought — take-profit signal
+  else if (rsi > 65) sc -= 12;
+  else if (rsi > 55) sc -=  5;
+
+  // MACD directional signal
+  sc += macd.trend === 'bullish' ? 14 : -9;
+
+  // Short-term price trend (last 24 candles of sparkline)
+  const sl = p.slice(-24);
+  if (sl.length > 1) {
+    const trend = (sl[sl.length-1] - sl[0]) / sl[0];
+    if      (trend >  0.08) sc += 16;
+    else if (trend >  0.03) sc +=  9;
+    else if (trend >  0.01) sc +=  4;
+    else if (trend < -0.08) sc -= 14;
+    else if (trend < -0.03) sc -=  8;
+    else if (trend < -0.01) sc -=  3;
+  }
+
+  // Volatility — moderate vol is healthy; extreme vol is risky
+  const v = calcVol(p);
+  if      (v > 0.005 && v < 0.04) sc +=  6;  // healthy trading range
+  else if (v > 0.04  && v < 0.08) sc +=  2;
+  else if (v > 0.12)               sc -=  8;  // erratic / dangerous
+
+  return Math.max(0, Math.min(100, sc));
+}
+
+function scoreVol(coin) {
+  // Vol/MCap baseline: top-100 large caps average ~3-8%; mid caps ~8-20%
+  // Start at 38 so typical coins score 48-62, standout coins score 70+
+  let sc = 38;
+  const vtm = (coin.total_volume / coin.market_cap) * 100;
+
+  if      (vtm > 25) sc += 42;  // exceptional liquidity
+  else if (vtm > 12) sc += 30;
+  else if (vtm >  6) sc += 20;
+  else if (vtm >  3) sc += 12;  // normal large-cap range
+  else if (vtm >  1) sc +=  5;
+  else               sc -=  6;  // very illiquid
+
+  // Directional confirmation: rising price + volume = strong buy
+  const ch = coin.price_change_percentage_24h || 0;
+  if (ch >  3 && vtm > 6)  sc += 12;
+  if (ch >  0 && vtm > 3)  sc +=  6;
+  if (ch < -3 && vtm > 10) sc -=  10;  // high-volume sell-off
+
+  // 7d trend alignment with 24h
+  const m7 = coin.price_change_percentage_7d_in_currency || 0;
+  if (m7 > 0 && ch > 0) sc +=  7;  // sustained upward momentum
+  if (m7 < 0 && ch < 0) sc -=  6;  // sustained downward momentum
+
+  return Math.max(0, Math.min(100, sc));
+}
+
+function scoreFund(coin) {
+  // Start at 36 — provides a meaningful floor even for basic coins
+  let sc = 36;
+  const mc = coin.market_cap;
+
+  // Market cap tier — log scale, higher mcap = more institutional trust
+  if      (mc > 200e9) sc += 22;  // BTC/ETH tier
+  else if (mc >  50e9) sc += 18;
+  else if (mc >  10e9) sc += 14;
+  else if (mc >   1e9) sc += 10;
+  else if (mc > 100e6) sc +=  6;
+  else                 sc +=  2;
+
+  // 7-day price momentum — directional only, not magnitude
+  const m = coin.price_change_percentage_7d_in_currency || 0;
+  if      (m >  20) sc += 12;
+  else if (m >   7) sc +=  7;
+  else if (m >   2) sc +=  3;
+  else if (m > -2)  sc +=  1;
+  else if (m < -20) sc -=  8;
+  else if (m <  -7) sc -=  4;
+
+  // ATH discount — coins far from ATH have more upside potential
+  const athPct = coin.ath_change_percentage || 0;
+  if      (athPct < -75) sc += 14;  // deep value zone
+  else if (athPct < -50) sc +=  9;
+  else if (athPct < -30) sc +=  5;
+  else if (athPct < -10) sc +=  2;
+  else                   sc -=  2;  // near ATH — limited upside
+
+  // Circulating supply ratio — high circ% = less future sell pressure
+  const circPct = coin.circulating_supply && coin.total_supply
+    ? (coin.circulating_supply / coin.total_supply) * 100 : 60;
+  if      (circPct > 90) sc +=  7;
+  else if (circPct > 70) sc +=  4;
+  else if (circPct > 50) sc +=  1;
+  else if (circPct < 20) sc -=  5;
+
+  return Math.max(0, Math.min(100, sc));
+}
+
+function scoreSocial(coin) {
+  // Rank-based — market cap rank is the cleanest proxy for community/awareness
+  // Start at 28 so even rank-100 coins contribute meaningfully
+  let sc = 28;
+  const rank = coin.market_cap_rank || 100;
+  if      (rank <=  2) sc += 52;  // BTC/ETH — global household names
+  else if (rank <=  5) sc += 42;
+  else if (rank <= 10) sc += 34;
+  else if (rank <= 20) sc += 26;
+  else if (rank <= 40) sc += 18;
+  else if (rank <= 70) sc += 10;
+  else                 sc +=  4;
+  return Math.max(0, Math.min(100, sc));
+}
+
+function scoreDev(coin) {
+  // Dev activity proxy via known ecosystem tiers
+  // Start at 40 — even unknown coins have some dev activity
+  let sc = 40;
+  const elite = ['bitcoin','ethereum','solana','polkadot'];
+  const high  = ['cardano','avalanche-2','chainlink','near','cosmos','algorand',
+                 'aptos','sui','arbitrum','optimism','polygon','toncoin'];
+  const mid   = ['stellar','tezos','hedera','flow','injective-protocol',
+                 'the-graph','uniswap','aave','chainlink','fantom','celo'];
+  if      (elite.includes(coin.id)) sc += 40;
+  else if (high.includes(coin.id))  sc += 26;
+  else if (mid.includes(coin.id))   sc += 14;
+  else                              sc +=  6;
+  return Math.max(0, Math.min(100, sc));
+}
+
+// ── NON-LINEAR PROJECTION MODEL ───────────────────────────
+/*
+  Multi-factor model:
+  1. Secular log-growth drift (crypto historical bias)
+  2. Momentum component with exponential decay over time
+  3. RSI mean-reversion pressure
+  4. MACD directional signal
+  5. Market-cap risk/reward amplifier
+  6. Confidence score bias
+  7. Volatility uncertainty band (σ scales with √t, Brownian motion)
+*/
+function project(coin, prices, confidence, tf) {
+  const {days, maxGain, maxLoss} = TF[tf];
+  const v    = Math.max(0.008, calcVol(prices));
+  const rsi  = calcRSI(prices);
+  const macd = calcMACD(prices);
+  const mom7 = Math.max(-60, Math.min(60, coin.price_change_percentage_7d_in_currency||0));
+  const mc   = coin.market_cap || 1e9;
+  const confBias = (confidence - 50) / 50;   // −1…+1
+
+  // Amplitude bias: 0-100 slider → -1 to +1 multiplier
+  // At 50 (default): ampBias = 0 (neutral)
+  // At 100 (max bull): ampBias = +1
+  // At 0 (max bear): ampBias = -1
+  const ampBias = (amplitude - 50) / 50;
+
+  // 1. Secular drift — log-normal growth model
+  const annualDrift = 0.65;
+  const dailyDrift  = Math.pow(1 + annualDrift, 1/365) - 1;
+  const baseDrift   = (Math.pow(1 + dailyDrift, days) - 1) * 100;
+
+  // 2. Momentum — exponential decay
+  const momDecay   = Math.exp(-0.05 * days);
+  const momContrib = mom7 * momDecay * 0.28;
+
+  // 3. RSI mean-reversion
+  let rsiRev = 0;
+  if      (rsi < 30) rsiRev =  (30 - rsi) * 0.20 * Math.sqrt(days/7);
+  else if (rsi > 70) rsiRev = -(rsi - 70) * 0.14 * Math.sqrt(days/7);
+  rsiRev = Math.max(-22, Math.min(22, rsiRev));
+
+  // 4. MACD signal
+  const macdContrib = (macd.trend === 'bullish' ? 2.8 : -2.0) * Math.log1p(days) * 0.45;
+
+  // 5. Market-cap amplifier
+  let mcFactor;
+  if     (mc > 50e9)  mcFactor = 0.55;
+  else if(mc > 10e9)  mcFactor = 0.82;
+  else if(mc >  1e9)  mcFactor = 1.18;
+  else if(mc > 100e6) mcFactor = 1.65;
+  else                mcFactor = 2.30;
+
+  // 6. Combine base return
+  const baseReturn = (
+    baseDrift   * 0.28 +
+    momContrib  * 0.22 +
+    rsiRev      * 0.18 +
+    macdContrib * 0.12 +
+    confBias * baseDrift * 0.38
+  ) * mcFactor;
+
+  // 7. Apply amplitude bias — shifts the realistic return up or down
+  //    ampBias shifts by up to 40% of baseDrift range, scaled by √days
+  const ampShift = ampBias * baseDrift * 0.80 * Math.sqrt(Math.min(days, 30) / 30);
+  const rawReturn  = baseReturn + ampShift;
+  const realistic  = Math.max(maxLoss, Math.min(maxGain, rawReturn));
+
+  // 8. Uncertainty band — σ scales with √(days)
+  //    Amplitude also expands/contracts the bull-bear spread
+  const sigma     = v * Math.sqrt(days) * 100;
+  const baseWidth = Math.min(Math.max(5, sigma * 1.3), Math.abs(realistic) * 0.85 + 18);
+  // Amplitude widens band toward bull (>50) or bear (<50) side asymmetrically
+  const bullExtra = Math.max(0,  ampBias) * baseWidth * 0.50;
+  const bearExtra = Math.max(0, -ampBias) * baseWidth * 0.50;
+  const bull = Math.min(maxGain, realistic + baseWidth + bullExtra);
+  const bear = Math.max(maxLoss, realistic - baseWidth - bearExtra);
+
+  return {
+    realistic: +realistic.toFixed(2),
+    bull:      +bull.toFixed(2),
+    bear:      +bear.toFixed(2),
+    projPrice: +(coin.current_price * (1 + realistic/100)).toFixed(6),
+    bullPrice: +(coin.current_price * (1 + bull/100)).toFixed(6),
+    bearPrice: +(coin.current_price * (1 + bear/100)).toFixed(6),
+  };
+}
+
+// ── CHART PATH BUILDER ────────────────────────────────────
+/*
+  Builds a non-linear projected price path using a
+  log-normal Brownian bridge with:
+  - Overlapping sinusoidal market cycles (different frequencies)
+  - Momentum-to-mean-reversion transition (markets swing then normalize)
+  - Noise decaying as we approach the target endpoint (bridge effect)
+  The projection spans EXACTLY the same number of data points as history,
+  meaning it illustrates the same timeframe forward.
+*/
+function buildProjectionPath(prices, coin, tf) {
+  if(!prices||prices.length<2) return {realistic:[],bull:[],bear:[]};
+  const proj  = coin.allProj[tf];
+  const n     = prices.length;
+  const start = prices[n-1];
+  const vol   = Math.max(0.009, calcVol(prices));
+
+  // Deterministic pseudo-random seed from coin name (stable rerenders)
+  const seed = coin.id.split('').reduce((a,c)=>a*31+c.charCodeAt(0),1) % 9999;
+  let rngState = seed;
+  function rng(){
+    rngState = (rngState * 1664525 + 1013904223) & 0x7fffffff;
+    return rngState / 0x7fffffff;
+  }
+
+  function makePath(startP, endP, nPts) {
+    if(startP <= 0 || endP <= 0) return Array(nPts).fill(startP);
+    const logS = Math.log(startP);
+    const logE = Math.log(endP);
+    const path = [];
+    let logCur = logS;
+
+    // Wave parameters — different per each call for bull/bear diversity
+    const wfreq1 = (2*Math.PI) / (nPts * (0.28 + rng()*0.15));
+    const wfreq2 = (2*Math.PI) / (nPts * (0.10 + rng()*0.06));
+    const wAmp   = vol * (0.55 + rng()*0.3);
+    const phase1 = rng() * Math.PI * 2;
+    const phase2 = rng() * Math.PI * 2;
+
+    for (let i=1; i<=nPts; i++) {
+      const t = i / nPts;
+      // Bridge: pull toward logE, strength increases as t→1
+      const remaining = logE - logCur;
+      const pullStrength = 0.08 + t * 0.18;
+      const bridge = remaining * pullStrength / nPts * nPts;  // normalize
+      // This simplifies to: bridge = remaining * (0.08 + t*0.18)
+      // Which creates a proper Brownian bridge that converges to logE
+
+      // Market wave cycles
+      const wave = wAmp * (Math.sin(wfreq1*i + phase1)*0.6 + Math.sin(wfreq2*i + phase2)*0.4);
+
+      // Noise (Gaussian via Box-Muller, decays toward end)
+      const noiseDecay = Math.exp(-2.0 * t);
+      const u1 = Math.max(1e-10, rng()), u2 = rng();
+      const gaussian = Math.sqrt(-2*Math.log(u1)) * Math.cos(2*Math.PI*u2);
+      const noise = gaussian * vol * 0.22 * noiseDecay;
+
+      // Momentum-to-reversion blend
+      const momentum = (logE > logS ? 1 : -1) * vol * 0.08 * Math.exp(-3*t);
+
+      logCur = logCur + bridge + wave*(1-t*0.6) + noise + momentum;
+      path.push(Math.exp(logCur));
+    }
+    // Ensure the last point is exactly the target (bridge guarantee)
+    if(path.length > 0) path[path.length-1] = endP;
+    return path;
+  }
+
+  return {
+    realistic: makePath(start, proj.projPrice, n),
+    bull:      makePath(start, proj.bullPrice,  n),
+    bear:      makePath(start, proj.bearPrice,  n),
+  };
+}
+
+// ── RENDER TABLE ──────────────────────────────────────────
+function renderTable() {
+  const tb = document.getElementById('cryptoTableBody');
+  tb.innerHTML = '';
+  cryptoData.forEach(coin => {
+    const p  = coin.allProj[currentTimeframe];
+    const ch = coin.priceChange24h;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="rank">#${coin.rank}</span></td>
+      <td>
+        <div class="crypto-name">
+          <img src="${coin.image}" class="crypto-icon" onerror="this.style.display='none'">
+          <div class="coin-label">
+            <a href="https://www.coingecko.com/en/coins/${coin.id}" target="_blank" rel="noopener"
+               class="coin-name-link" title="View ${coin.name} on CoinGecko">${coin.name}</a>
+            <span class="crypto-symbol">${coin.symbol}</span>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="confidence-score" style="color:${scoreColor(coin.confidenceScore)}">${coin.confidenceScore}<span style="font-size:.7rem;color:var(--text-secondary)">/100</span></div>
+        <div class="score-bar"><div class="score-fill" style="width:${coin.confidenceScore}%"></div></div>
+      </td>
+      <td class="price">$${fmtNum(coin.currentPrice)}</td>
+      <td><span class="change ${ch>=0?'positive':'negative'}">${ch>=0?'▲':'▼'} ${Math.abs(ch).toFixed(2)}%</span></td>
+      <td>$${fmtLarge(coin.marketCap)}</td>
+      <td><span style="color:${coin.volumeToMcap>8?'var(--neon-green)':'var(--neon-cyan)'}">${coin.volumeToMcap}%</span></td>
+      <td><span class="proj-main ${p.realistic>=0?'positive':'negative'}">${p.realistic>=0?'+':''}${p.realistic}%</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          ${bearSVG('36')}
+          <span class="bear-col" style="font-size:1.05rem;">${p.bear}%</span>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          ${bullSVG('36')}
+          <span class="bull-col" style="font-size:1.05rem;">+${p.bull}%</span>
+        </div>
+      </td>
+      <td><button class="action-btn" onclick="showDetails('${coin.id}')">CHART & DATA</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// ── SHOW DETAIL MODAL ─────────────────────────────────────
+function showDetails(id) {
+  const coin = cryptoData.find(c=>c.id===id);
+  if(!coin) return;
+  const tf = currentTimeframe;
+
+  document.getElementById('modalTitle').textContent = `${coin.name}  (${coin.symbol})`;
+  document.getElementById('modalSubtitle').textContent =
+    `Rank #${coin.rank}  ·  Confidence: ${coin.confidenceScore}/100  ·  RSI: ${coin.rsi.toFixed(1)}  ·  MACD: ${coin.macd.trend.toUpperCase()}`;
+  document.getElementById('chartSectionLabel').textContent =
+    `◄ HISTORICAL ${TF[tf].label.toUpperCase()} ·|· PROJECTED ${TF[tf].label.toUpperCase()} ►`;
+
+  // Coin description
+  document.getElementById('coinDesc').textContent = getCoinDescription(coin.id);
+
+  buildProjBreakdown(coin);
+  buildSupplyGrid(coin);
+  buildMetrics(coin);
+  renderChart(coin);
+  document.getElementById('detailModal').classList.add('active');
+}
+
+function buildProjBreakdown(coin) {
+  const el = document.getElementById('projBreakdown');
+  const rows = Object.keys(TF).map(tf => {
+    const p = coin.allProj[tf];
+    return `<div class="proj-row">
+      <span class="proj-tf">${TF[tf].label}</span>
+      <span class="proj-vals">
+        <span class="proj-bear">${bearSVG('26')} ${p.bear}%</span>
+        <span class="proj-real">${p.realistic>=0?'+':''}${p.realistic}%</span>
+        <span class="proj-bull">${bullSVG('26')} +${p.bull}%</span>
+      </span>
+      <span class="proj-price-label">→ $${fmtNum(p.projPrice)}</span>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="proj-breakdown-title">⚡ MULTI-TIMEFRAME PROJECTION MATRIX (Non-Linear Model)</div>${rows}`;
+}
+
+function buildSupplyGrid(coin) {
+  const el = document.getElementById('supplyGrid');
+  const tf = currentTimeframe;
+  const p  = coin.allProj[tf];
+
+  // Price range for current timeframe from sparkline
+  const prices = coin.sparkline || [];
+  let rangeHigh = coin.high_24h, rangeLow = coin.low_24h;
+  if (prices.length > 1) {
+    rangeHigh = Math.max(...prices, coin.high_24h || 0);
+    rangeLow  = Math.min(...prices.filter(x=>x>0), coin.low_24h || Infinity);
+    if (rangeLow === Infinity) rangeLow = coin.currentPrice;
+  }
+
+  // Circulating supply %
+  const circPct = coin.circulatingSupply && coin.totalSupply
+    ? ((coin.circulatingSupply / coin.totalSupply)*100).toFixed(1) + '%'
+    : coin.circulatingSupply && coin.maxSupply
+    ? ((coin.circulatingSupply / coin.maxSupply)*100).toFixed(1) + '% of max'
+    : 'N/A';
+
+  // Staked/Locked estimate — known staking rates
+  const STAKING_RATES = {
+    'ethereum':72,'cardano':65,'solana':68,'polkadot':55,'cosmos':63,
+    'avalanche-2':58,'near':42,'tron':50,'algorand':38,'tezos':72,
+    'hedera':20,'injective-protocol':60,'aptos':80,'sui':75,'chainlink':15,
+  };
+  const stakingRate = STAKING_RATES[coin.id] || null;
+  const stakedAmt   = stakingRate && coin.circulatingSupply
+    ? fmtLarge(coin.circulatingSupply * stakingRate / 100) + ' ' + coin.symbol + ' (' + stakingRate + '%)'
+    : 'Data not available';
+
+  const cards = [
+    { label:'Total Coins / Max Supply',
+      value: coin.maxSupply ? fmtLarge(coin.maxSupply) + ' ' + coin.symbol : coin.totalSupply ? fmtLarge(coin.totalSupply) + ' (total)' : '∞ (unlimited)',
+      sub: coin.maxSupply ? 'Hard capped supply' : 'Inflationary / no hard cap',
+      color:'#00f0ff' },
+    { label:'Current Circulation',
+      value: coin.circulatingSupply ? fmtLarge(coin.circulatingSupply) + ' ' + coin.symbol : '—',
+      sub: 'In active circulation · ' + circPct + ' of supply',
+      color:'#00f0ff' },
+    { label:'Total Staked / Locked',
+      value: stakedAmt,
+      sub: stakingRate ? 'Est. staking participation rate' : 'PoW or staking data unavailable',
+      color: stakingRate > 50 ? '#00ff88' : '#ffaa00' },
+    { label:'Fully Diluted Mkt Cap',
+      value: coin.fullyDilutedMcap ? '$' + fmtLarge(coin.fullyDilutedMcap) : coin.maxSupply ? '$' + fmtLarge(coin.maxSupply * coin.currentPrice) : '—',
+      sub: 'At current price × max supply',
+      color:'#cc44ff' },
+    { label:`Price Range (${TF[tf].label})`,
+      value: '$' + fmtNum(rangeLow) + ' – $' + fmtNum(rangeHigh),
+      sub: `Spread: ${(((rangeHigh-rangeLow)/rangeLow)*100).toFixed(1)}% | Current: $${fmtNum(coin.currentPrice)}`,
+      color:'#ffaa00' },
+    { label:'Team / Operator Holdings',
+      value: getTeamOwnership(coin.id).pct,
+      sub: getTeamOwnership(coin.id).note,
+      color: (()=>{ const p = getTeamOwnership(coin.id).pct; const n = parseFloat(p)||0;
+        return n < 10 ? '#00ff88' : n < 30 ? '#ffaa00' : '#ff4488'; })() },
+  ];
+
+  el.innerHTML = `
+    <div style="grid-column:1/-1;font-family:'Orbitron',monospace;color:var(--proj-purple);font-size:.85rem;letter-spacing:2px;padding-bottom:8px;border-bottom:1px solid rgba(179,0,255,.2);margin-bottom:4px;">
+      ⚡ TOKEN SUPPLY & MARKET STRUCTURE
+    </div>
+    ${cards.map(c=>`
+    <div class="supply-card">
+      <div class="supply-label">${c.label}</div>
+      <div class="supply-value" style="color:${c.color}">${c.value}</div>
+      <div class="supply-sub">${c.sub}</div>
+    </div>`).join('')}`;
+}
+
+function buildMetrics(coin) {
+  const el = document.getElementById('metricsGrid');
+  const M = [
+    ['Current Price',      '$'+fmtNum(coin.currentPrice),  '#00f0ff'],
+    ['Market Cap',         '$'+fmtLarge(coin.marketCap),   '#00f0ff'],
+    ['24h Volume',         '$'+fmtLarge(coin.volume24h),   '#00f0ff'],
+    ['Vol/MCap Ratio',     coin.volumeToMcap+'%',          coin.volumeToMcap>8?'#00ff41':'#ffaa00'],
+    ['All-Time High',      coin.ath?'$'+fmtNum(coin.ath):'—', '#ff4488'],
+    ['From ATH',           coin.athChangePercent?coin.athChangePercent.toFixed(1)+'%':'—', '#ff4488'],
+    ['RSI (14)',           coin.rsi.toFixed(2),             rsiColor(coin.rsi)],
+    ['MACD Trend',         coin.macd.trend.toUpperCase(),  coin.macd.trend==='bullish'?'#00ff41':'#ff00ff'],
+    ['Technical Score',   Math.round(coin.technicalScore)+'/100',   scoreColor(coin.technicalScore)],
+    ['Volume Score',      Math.round(coin.volumeScore)+'/100',      scoreColor(coin.volumeScore)],
+    ['Fundamental Score', Math.round(coin.fundamentalScore)+'/100', scoreColor(coin.fundamentalScore)],
+    ['Confidence Score',  coin.confidenceScore+'/100',              scoreColor(coin.confidenceScore)],
+  ];
+  el.innerHTML = `
+    <div style="grid-column:1/-1;font-family:'Orbitron',monospace;color:var(--neon-cyan);font-size:.85rem;letter-spacing:2px;padding-bottom:8px;border-bottom:1px solid rgba(0,240,255,.2);margin-bottom:4px;">
+      ⚡ TECHNICAL & SCORING METRICS
+    </div>
+    ${M.map(([l,v,c])=>`
+    <div class="metric-card">
+      <div class="metric-label">${l}</div>
+      <div class="metric-value" style="color:${c}">${v}</div>
+    </div>`).join('')}`;
+}
+
+// ── CHART ─────────────────────────────────────────────────
+/*
+  KEY FIX: Chart.js 4 requires borderDash on the dataset object,
+  which it DOES support. The real bugs were:
+  1. spanGaps:false with null-padded arrays prevented line drawing
+  2. Date labels must be strings not numbers
+  3. The projection arrays need to share the exact same index position
+     as the last historical price to form a visual connection.
+  
+  Solution: Use TWO separate x-axis segments by building arrays of
+  equal total length (hist + proj = 2n points) with null for the
+  non-active region. SpanGaps is set to FALSE on hist, TRUE on proj
+  so the projection lines skip over their null prefix and draw only
+  where data exists. The critical connection point (index n-1) has
+  both the last hist price AND the first proj price to ensure continuity.
+*/
+function renderChart(coin) {
+  const canvas = document.getElementById('priceChart');
+  if (window.myChart) { window.myChart.destroy(); window.myChart = null; }
+
+  const prices = coin.sparkline || [];
+  if (prices.length < 2) {
+    canvas.getContext('2d').fillStyle='rgba(0,240,255,0.5)';
+    canvas.getContext('2d').fillText('Insufficient data', 20, 40);
+    return;
+  }
+
+  const n    = prices.length;                   // number of historical candles
+  const tf   = currentTimeframe;
+  const proj = buildProjectionPath(prices, coin, tf);
+
+  // ── Build real date labels ──────────────────────────────
+  // Historical: sparkline covers 7 days (168 hourly points from CoinGecko)
+  // We scale dates based on how many points we have vs 7 days
+  const now       = Date.now();
+  const tfDays    = TF[tf].days;
+  const histMs    = 7 * 24 * 3600 * 1000;           // sparkline is always 7d
+  const msPerPt   = histMs / n;
+  const projMs    = tfDays * 24 * 3600 * 1000;
+  const projMsPt  = projMs / n;
+
+  function fmtDate(ts) {
+    const d = new Date(ts);
+    const mo = d.toLocaleString('en-US', { month: 'short' });
+    const day = d.getDate();
+    const hr  = d.getHours().toString().padStart(2,'0');
+    const min = d.getMinutes().toString().padStart(2,'0');
+    // For longer timeframes show date only, for short show time too
+    if (tfDays <= 1) return `${hr}:${min}`;
+    if (tfDays <= 7) return `${mo} ${day} ${hr}:00`;
+    return `${mo} ${day}`;
+  }
+
+  const allLabels = [];
+  // Historical labels (from 7 days ago to now)
+  for (let i = 0; i < n; i++) {
+    const ts = (now - histMs) + i * msPerPt;
+    allLabels.push(fmtDate(ts));
+  }
+  // Projection labels (from now forward by tfDays)
+  for (let i = 1; i <= n; i++) {
+    const ts = now + i * projMsPt;
+    allLabels.push(fmtDate(ts));
+  }
+
+  // ── Dataset assembly ───────────────────────────────────
+  // Total length = 2n. Historical occupies indices 0..n-1.
+  // Projection occupies indices n-1..2n-1 (index n-1 shared = connection point).
+
+  // Historical: real prices for 0..n-1, null for n..2n-1
+  const histData = [...prices, ...Array(n).fill(null)];
+
+  // Projection: null for 0..n-2, then start=prices[n-1] at index n-1, then proj path for n..2n-1
+  const buildProjArr = (pathArr) => {
+    const arr = new Array(2 * n).fill(null);
+    arr[n - 1] = prices[n - 1];  // connection point = last hist price
+    for (let i = 0; i < Math.min(pathArr.length, n); i++) {
+      arr[n + i] = pathArr[i];
+    }
+    return arr;
+  };
+
+  const projReal = buildProjArr(proj.realistic);
+  const projBull = buildProjArr(proj.bull);
+  const projBear = buildProjArr(proj.bear);
+
+  window.myChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: allLabels,
+      datasets: [
+        // ① Historical — solid cyan
+        {
+          label: `Historical Price (7d sparkline)`,
+          data: histData,
+          borderColor: '#00f0ff',
+          backgroundColor: 'rgba(0,240,255,0.06)',
+          borderWidth: 2.2,
+          tension: 0.35,
+          fill: true,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          spanGaps: false,     // stop at nulls — don't draw across projection zone
+          segment: undefined,
+        },
+        // ② Projected realistic — purple dashed
+        {
+          label: 'Projected — Realistic',
+          data: projReal,
+          borderColor: '#cc44ff',
+          backgroundColor: 'rgba(204,68,255,0.04)',
+          borderWidth: 2.5,
+          tension: 0.4,
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          spanGaps: true,      // draw through the null prefix, connect from n-1 onward
+          borderDash: [8, 5],
+        },
+        // ③ Bull scenario — green dashed
+        {
+          label: 'Bull Scenario',
+          data: projBull,
+          borderColor: 'rgba(0,255,136,0.75)',
+          backgroundColor: 'rgba(0,255,136,0.03)',
+          borderWidth: 1.6,
+          tension: 0.42,
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 3,
+          spanGaps: true,
+          borderDash: [4, 7],
+        },
+        // ④ Bear scenario — magenta dashed
+        {
+          label: 'Bear Scenario',
+          data: projBear,
+          borderColor: 'rgba(255,68,136,0.75)',
+          backgroundColor: 'rgba(255,68,136,0.03)',
+          borderWidth: 1.6,
+          tension: 0.42,
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 3,
+          spanGaps: true,
+          borderDash: [4, 7],
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: {
+            color: '#a0a0c0',
+            font: { family: 'Share Tech Mono', size: 11 },
+            boxWidth: 28,
+            padding: 16,
+          },
+        },
+        tooltip: {
+          backgroundColor: 'rgba(4,4,18,0.97)',
+          titleColor: '#00f0ff',
+          bodyColor: '#e0e0ff',
+          borderColor: 'rgba(0,240,255,0.4)',
+          borderWidth: 1,
+          padding: 10,
+          titleFont: { family: 'Share Tech Mono', size: 11 },
+          bodyFont:  { family: 'Share Tech Mono', size: 11 },
+          callbacks: {
+            title(ctx) {
+              const i = ctx[0].dataIndex;
+              const lbl = allLabels[i];
+              if (i < n)    return `◄ HIST  ${lbl}`;
+              if (i === n-1) return `▶ NOW   ${lbl}`;
+              return `▶ PROJ  ${lbl}`;
+            },
+            label(ctx) {
+              if (ctx.raw === null || ctx.raw === undefined) return null;
+              return `${ctx.dataset.label.slice(0,20)}: $${fmtNum(ctx.raw)}`;
+            },
+          },
+        },
+      },
+      scales: {
+        y: {
+          position: 'left',
+          grid: { color: 'rgba(0,240,255,0.07)' },
+          ticks: {
+            color: '#8080a0',
+            font: { family: 'Share Tech Mono', size: 10 },
+            callback: v => '$' + fmtNum(v),
+            maxTicksLimit: 8,
+          },
+        },
+        x: {
+          grid: { color: 'rgba(0,240,255,0.05)' },
+          ticks: {
+            color: '#8080a0',
+            font: { family: 'Share Tech Mono', size: 9 },
+            maxRotation: 30,
+            maxTicksLimit: 14,
+            // Show every Nth label to avoid clutter
+            callback(val, idx) {
+              const step = Math.ceil((2*n) / 12);
+              if (idx % step !== 0 && idx !== n-1 && idx !== 2*n-1) return '';
+              return allLabels[idx] || '';
+            },
+          },
+        },
+      },
+    },
+    // Inline plugin: draw divider line at the HIST/PROJ boundary
+    plugins: [{
+      id: 'nowLine',
+      afterDatasetsDraw(chart) {
+        const { ctx, scales: { x, y } } = chart;
+        // Index n-1 is the boundary (last historical = first projection point)
+        const xPx = x.getPixelForValue(n - 1);
+        if (!xPx || isNaN(xPx)) return;
+
+        ctx.save();
+
+        // Shaded projection zone
+        ctx.fillStyle = 'rgba(204,68,255,0.05)';
+        ctx.fillRect(xPx, y.top, chart.chartArea.right - xPx, y.bottom - y.top);
+
+        // Vertical divider line
+        ctx.beginPath();
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = 'rgba(204,68,255,0.8)';
+        ctx.lineWidth = 1.8;
+        ctx.moveTo(xPx, y.top);
+        ctx.lineTo(xPx, y.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // "NOW" label
+        ctx.fillStyle = 'rgba(204,68,255,0.95)';
+        ctx.font = 'bold 10px Share Tech Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('NOW', xPx, y.top + 14);
+
+        // "PROJECTED →" label in projection zone
+        ctx.fillStyle = 'rgba(204,68,255,0.55)';
+        ctx.font = '9px Share Tech Mono, monospace';
+        ctx.textAlign = 'left';
+        const projZoneW = chart.chartArea.right - xPx;
+        if (projZoneW > 60) {
+          ctx.fillText(`◄ HIST  |  PROJECTED ${TF[tf].label.toUpperCase()} ►`, xPx + 6, y.top + 14);
+        }
+
+        ctx.restore();
+      },
+    }],
+  });
+}
+
+// ── UI CONTROLS ───────────────────────────────────────────
+function toggleSettings(){
+  document.getElementById('settingsPanel').classList.toggle('active');
+}
+function closeModal(){
+  document.getElementById('detailModal').classList.remove('active');
+  if(window.myChart){window.myChart.destroy();window.myChart=null;}
+}
+function setTimeframe(tf, btn){
+  currentTimeframe = tf;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('timeframeDisplay').textContent = TF[tf].label.toUpperCase();
+  renderTable();
+}
+function updateAmplitude(val) {
+  amplitude = parseInt(val);
+
+  // Derive label and description
+  let label, desc, color;
+  if      (amplitude >= 90) { label = 'ULTRA BULL'; color = '#00ff88'; desc = 'Maximum bullish bias — all projections strongly shifted upward'; }
+  else if (amplitude >= 70) { label = 'BULLISH';    color = '#44dd88'; desc = 'Bullish tilt — realistic cases pulled higher, bull bands widened'; }
+  else if (amplitude >= 58) { label = 'MILD BULL';  color = '#88cc88'; desc = 'Slight bullish lean — modest upward pressure on all scenarios'; }
+  else if (amplitude >= 43) { label = 'NEUTRAL';    color = '#8080a0'; desc = 'No adjustment — model runs on raw signals only'; }
+  else if (amplitude >= 30) { label = 'MILD BEAR';  color = '#cc8888'; desc = 'Slight bearish lean — modest downward pressure on all scenarios'; }
+  else if (amplitude >= 10) { label = 'BEARISH';    color = '#dd4444'; desc = 'Bearish tilt — realistic cases pulled lower, bear bands widened'; }
+  else                      { label = 'ULTRA BEAR'; color = '#ff4488'; desc = 'Maximum bearish bias — all projections strongly shifted downward'; }
+
+  document.getElementById('amplitudeLabel').textContent = label;
+  document.getElementById('amplitudeLabel').style.color  = color;
+  document.getElementById('amplitudeDesc').textContent   = desc;
+  document.getElementById('amplitudeDesc').style.color   = color;
+
+  // Recalculate all projections with new amplitude and re-render
+  if (cryptoData.length) {
+    cryptoData.forEach(coin => {
+      const allProj = {};
+      for (const tf of Object.keys(TF)) {
+        allProj[tf] = project(coin, coin.sparkline, coin.confidenceScore, tf);
+      }
+      coin.allProj = allProj;
+    });
+    renderTable();
+  }
+}
+
+function updateWeight(type, val){
+  weights[type] = parseInt(val);
+  document.getElementById(type+'Weight').textContent = val+'%';
+  cryptoData.forEach(coin=>{
+    coin.confidenceScore = Math.round(weightedScore(
+      coin.technicalScore,coin.volumeScore,coin.fundamentalScore,coin.socialScore,coin.devScore
+    ));
+  });
+  cryptoData.sort((a,b)=>b.confidenceScore-a.confidenceScore);
+  cryptoData.forEach((c,i)=>c.rank=i+1);
+  renderTable();
+}
+function refreshData(){
+  document.getElementById('loadingContainer').style.display='block';
+  document.getElementById('loadingContainer').innerHTML='<div class="loading-spinner"></div><div class="loading-text">REFRESHING DATA MATRIX...</div>';
+  document.getElementById('cryptoTable').style.display='none';
+  document.getElementById('verificationContent').innerHTML='<div class="verification-item"><span class="check-icon">◉</span> Refreshing feeds...</div>';
+  cryptoData=[];
+  initializeApp();
+}
+function sortBy(key){
+  if(lastSortKey===key) sortDir*=-1; else{sortDir=-1;lastSortKey=key;}
+  const fn={
+    rank:c=>c.rank,name:c=>c.name,confidence:c=>c.confidenceScore,
+    price:c=>c.currentPrice,change:c=>c.priceChange24h,
+    marketCap:c=>c.marketCap,volume:c=>c.volumeToMcap,
+    projected:c=>c.allProj[currentTimeframe].realistic,
+    bear:c=>c.allProj[currentTimeframe].bear,
+    bull:c=>c.allProj[currentTimeframe].bull,
+  };
+  const f=fn[key]||(c=>c.rank);
+  if(key==='name') cryptoData.sort((a,b)=>sortDir*f(a).localeCompare(f(b)));
+  else             cryptoData.sort((a,b)=>sortDir*(f(b)-f(a)));
+  cryptoData.forEach((c,i)=>c.rank=i+1);
+  renderTable();
+}
+// ── SVG ICONS: REALISTIC BEAR & BULL ─────────────────────
+function bearSVG(size='36') {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;flex-shrink:0;">
+  <defs>
+    <radialGradient id="bearBody${size}" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stop-color="#8B5E3C"/>
+      <stop offset="60%" stop-color="#6B3F1F"/>
+      <stop offset="100%" stop-color="#4A2810"/>
+    </radialGradient>
+    <radialGradient id="bearFace${size}" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#A0714A"/>
+      <stop offset="100%" stop-color="#7A4E2D"/>
+    </radialGradient>
+    <radialGradient id="bearEar${size}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#C97C5A"/>
+      <stop offset="100%" stop-color="#8B5E3C"/>
+    </radialGradient>
+    <filter id="bearShadow${size}">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.5)"/>
+    </filter>
+    <filter id="bearGlow${size}">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Body -->
+  <ellipse cx="40" cy="52" rx="22" ry="18" fill="url(#bearBody${size})" filter="url(#bearShadow${size})"/>
+  <!-- Belly highlight -->
+  <ellipse cx="40" cy="54" rx="12" ry="10" fill="#9B6B42" opacity=".5"/>
+  <!-- Head -->
+  <circle cx="40" cy="30" r="16" fill="url(#bearFace${size})" filter="url(#bearShadow${size})"/>
+  <!-- Ear left -->
+  <circle cx="26" cy="17" r="7" fill="url(#bearEar${size})"/>
+  <circle cx="26" cy="17" r="4" fill="#C97C5A"/>
+  <circle cx="26" cy="17" r="2.5" fill="#E8A882"/>
+  <!-- Ear right -->
+  <circle cx="54" cy="17" r="7" fill="url(#bearEar${size})"/>
+  <circle cx="54" cy="17" r="4" fill="#C97C5A"/>
+  <circle cx="54" cy="17" r="2.5" fill="#E8A882"/>
+  <!-- Snout -->
+  <ellipse cx="40" cy="35" rx="8" ry="6" fill="#C97C5A"/>
+  <ellipse cx="40" cy="34" rx="6" ry="4" fill="#D98E66"/>
+  <!-- Nose -->
+  <ellipse cx="40" cy="31.5" rx="3.5" ry="2.5" fill="#2C1A10"/>
+  <!-- Nostrils -->
+  <circle cx="38.5" cy="31.5" r="1" fill="#1A0A05"/>
+  <circle cx="41.5" cy="31.5" r="1" fill="#1A0A05"/>
+  <!-- Eyes — deep brown with red glow for bearish -->
+  <circle cx="33" cy="26" r="4" fill="#1A0A05"/>
+  <circle cx="47" cy="26" r="4" fill="#1A0A05"/>
+  <circle cx="33" cy="26" r="3" fill="#3D1A10"/>
+  <circle cx="47" cy="26" r="3" fill="#3D1A1C"/>
+  <!-- Red angry eye glow -->
+  <circle cx="33" cy="26" r="2" fill="#8B0000" filter="url(#bearGlow${size})" opacity=".9"/>
+  <circle cx="47" cy="26" r="2" fill="#8B0000" filter="url(#bearGlow${size})" opacity=".9"/>
+  <circle cx="34" cy="25" r=".8" fill="#ff6666" opacity=".8"/>
+  <circle cx="48" cy="25" r=".8" fill="#ff6666" opacity=".8"/>
+  <!-- Angry eyebrow furrows -->
+  <line x1="29" y1="21" x2="36" y2="23" stroke="#4A2810" stroke-width="2" stroke-linecap="round"/>
+  <line x1="44" y1="23" x2="51" y2="21" stroke="#4A2810" stroke-width="2" stroke-linecap="round"/>
+  <!-- Mouth — frown -->
+  <path d="M36 38 Q40 36 44 38" stroke="#2C1A10" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- Paws with red claws -->
+  <ellipse cx="22" cy="65" rx="8" ry="5" fill="#6B3F1F"/>
+  <ellipse cx="58" cy="65" rx="8" ry="5" fill="#6B3F1F"/>
+  <!-- Red bear claws (down = bearish) -->
+  <line x1="19" y1="68" x2="17" y2="74" stroke="#CC2222" stroke-width="2" stroke-linecap="round" filter="url(#bearGlow${size})"/>
+  <line x1="22" y1="69" x2="22" y2="75" stroke="#CC2222" stroke-width="2" stroke-linecap="round" filter="url(#bearGlow${size})"/>
+  <line x1="25" y1="68" x2="27" y2="74" stroke="#CC2222" stroke-width="2" stroke-linecap="round" filter="url(#bearGlow${size})"/>
+  <line x1="55" y1="68" x2="53" y2="74" stroke="#CC2222" stroke-width="2" stroke-linecap="round" filter="url(#bearGlow${size})"/>
+  <line x1="58" y1="69" x2="58" y2="75" stroke="#CC2222" stroke-width="2" stroke-linecap="round" filter="url(#bearGlow${size})"/>
+  <line x1="61" y1="68" x2="63" y2="74" stroke="#CC2222" stroke-width="2" stroke-linecap="round" filter="url(#bearGlow${size})"/>
+  <!-- Down arrow — red bearish indicator -->
+  <path d="M40 42 L40 56 M33 50 L40 57 L47 50" stroke="#EE3333" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#bearGlow${size})"/>
+</svg>`;
+}
+
+function bullSVG(size='36') {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;flex-shrink:0;">
+  <defs>
+    <radialGradient id="bullBody${size}" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stop-color="#8B6914"/>
+      <stop offset="60%" stop-color="#6B4E10"/>
+      <stop offset="100%" stop-color="#4A3408"/>
+    </radialGradient>
+    <radialGradient id="bullFace${size}" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#A07828"/>
+      <stop offset="100%" stop-color="#7A5518"/>
+    </radialGradient>
+    <radialGradient id="bullSnout${size}" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#C49A50"/>
+      <stop offset="100%" stop-color="#9A7230"/>
+    </radialGradient>
+    <filter id="bullShadow${size}">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.5)"/>
+    </filter>
+    <filter id="bullGlow${size}">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Muscular body -->
+  <ellipse cx="40" cy="52" rx="24" ry="19" fill="url(#bullBody${size})" filter="url(#bullShadow${size})"/>
+  <!-- Chest muscle highlight -->
+  <ellipse cx="40" cy="48" rx="14" ry="10" fill="#9B7A1A" opacity=".5"/>
+  <!-- Head — wider/heavier than bear -->
+  <ellipse cx="40" cy="30" rx="17" ry="15" fill="url(#bullFace${size})" filter="url(#bullShadow${size})"/>
+  <!-- Horns — curved and prominent -->
+  <path d="M24 20 Q14 8 10 14 Q8 20 16 22" fill="#D4AA60" stroke="#8B6914" stroke-width="1"/>
+  <path d="M56 20 Q66 8 70 14 Q72 20 64 22" fill="#D4AA60" stroke="#8B6914" stroke-width="1"/>
+  <!-- Horn tips — gold -->
+  <circle cx="11" cy="14" r="3" fill="#F0C040"/>
+  <circle cx="69" cy="14" r="3" fill="#F0C040"/>
+  <!-- Snout — wide and flat -->
+  <ellipse cx="40" cy="36" rx="11" ry="8" fill="url(#bullSnout${size})"/>
+  <ellipse cx="40" cy="35" rx="9" ry="6" fill="#C49A50"/>
+  <!-- Nostrils — wide -->
+  <ellipse cx="36" cy="35" rx="2.5" ry="2" fill="#3D2808"/>
+  <ellipse cx="44" cy="35" rx="2.5" ry="2" fill="#3D2808"/>
+  <!-- Eyes — determined, green glow for bullish -->
+  <circle cx="31" cy="25" r="4.5" fill="#2A1A05"/>
+  <circle cx="49" cy="25" r="4.5" fill="#2A1A05"/>
+  <circle cx="31" cy="25" r="3.5" fill="#3D2808"/>
+  <circle cx="49" cy="25" r="3.5" fill="#3D2808"/>
+  <!-- Green determined eye glow -->
+  <circle cx="31" cy="25" r="2.2" fill="#006600" filter="url(#bullGlow${size})" opacity=".9"/>
+  <circle cx="49" cy="25" r="2.2" fill="#006600" filter="url(#bullGlow${size})" opacity=".9"/>
+  <circle cx="32" cy="24" r=".9" fill="#44ff88" opacity=".9"/>
+  <circle cx="50" cy="24" r=".9" fill="#44ff88" opacity=".9"/>
+  <!-- Strong eyebrow ridges -->
+  <path d="M27 20 Q31 19 35 21" stroke="#4A3408" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M45 21 Q49 19 53 20" stroke="#4A3408" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Mouth — determined set -->
+  <path d="M35 40 Q40 42 45 40" stroke="#3D2808" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- Heavy hooves -->
+  <ellipse cx="22" cy="66" rx="9" ry="5.5" fill="#4A3408"/>
+  <ellipse cx="58" cy="66" rx="9" ry="5.5" fill="#4A3408"/>
+  <line x1="16" y1="70" x2="18" y2="70" stroke="#2A1A05" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="22" y1="71" x2="24" y2="71" stroke="#2A1A05" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="54" y1="71" x2="56" y2="71" stroke="#2A1A05" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="60" y1="70" x2="62" y2="70" stroke="#2A1A05" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Up arrow — green bullish indicator -->
+  <path d="M40 56 L40 42 M33 48 L40 41 L47 48" stroke="#22CC44" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#bullGlow${size})"/>
+</svg>`;
+}
+
+// ── MARKET TREND (Best-Practice: Breadth + Median + Momentum) ──
+/*
+  Uses 3 signals combined for a robust market trend assessment:
+  1. Market Breadth: % of coins with positive 24h change (Advance/Decline ratio)
+  2. Median 24h change (more robust than average — ignores outlier spikes)
+  3. Volume-weighted price change (heavy coins matter more to market direction)
+  Classification thresholds based on standard technical analysis practice.
+*/
+function updateMarketTrend(){
+  // Use the full non-stable coin universe (~80-90 coins), NOT just the top 25
+  const pool = allRawCoins.length ? allRawCoins : cryptoData;
+  if (!pool.length) return;
+
+  // Pull 24h change from raw CoinGecko field or processed field
+  const changes = pool.map(c =>
+    (c.price_change_percentage_24h !== undefined
+      ? c.price_change_percentage_24h
+      : c.priceChange24h) || 0
+  );
+  const vols = pool.map(c =>
+    (c.total_volume !== undefined ? c.total_volume : c.volume24h) || 0
+  );
+
+  const total = pool.length;
+
+  // 1. Market Breadth — advance/decline ratio across full universe
+  const advancing = changes.filter(ch => ch > 0).length;
+  const declining  = changes.filter(ch => ch < 0).length;
+  const breadthPct = (advancing / total) * 100;
+  const breadthSignal = (breadthPct - 50) / 50 * 100; // -100…+100
+
+  // 2. Median 24h change — robust against outliers
+  const sorted24h = [...changes].sort((a,b) => a - b);
+  const mid = Math.floor(sorted24h.length / 2);
+  const median24h = sorted24h.length % 2 !== 0
+    ? sorted24h[mid]
+    : (sorted24h[mid-1] + sorted24h[mid]) / 2;
+
+  // 3. Volume-weighted average 24h change — large caps have proportional influence
+  const totalVol = vols.reduce((s, v) => s + v, 0);
+  const vwChange = totalVol > 0
+    ? changes.reduce((s, ch, i) => s + ch * vols[i], 0) / totalVol
+    : median24h;
+
+  // 4. Composite: breadth dominates (50%), median (30%), volume-weighted (20%)
+  const composite = breadthSignal * 0.5 + median24h * 0.3 + vwChange * 0.2;
+
+  const el = document.getElementById('marketTrend');
+  let trend, cls;
+  if      (composite >  8 && breadthPct > 62) { trend = 'BULLISH';   cls = 'status-value positive'; }
+  else if (composite >  3 && breadthPct > 53) { trend = 'MILD BULL'; cls = 'status-value positive'; }
+  else if (composite < -8 && breadthPct < 38) { trend = 'BEARISH';   cls = 'status-value negative'; }
+  else if (composite < -3 && breadthPct < 47) { trend = 'MILD BEAR'; cls = 'status-value negative'; }
+  else                                         { trend = 'NEUTRAL';   cls = 'status-value';          }
+
+  el.textContent = trend;
+  el.className   = cls;
+
+  log(`Market Trend (${total} coins): ${trend} | Adv/Dec: ${advancing}/${declining} (${breadthPct.toFixed(0)}%) | Median: ${median24h.toFixed(2)}% | VW-avg: ${vwChange.toFixed(2)}% | Composite: ${composite.toFixed(2)}`);
+}
+
+// ── FORMATTING ────────────────────────────────────────────
+function fmtNum(n){
+  if(n===null||n===undefined||isNaN(n)) return '—';
+  if(n<0.0001) return n.toFixed(8);
+  if(n<0.01)   return n.toFixed(6);
+  if(n<1)      return n.toFixed(4);
+  if(n<10)     return n.toFixed(3);
+  if(n<1000)   return n.toFixed(2);
+  return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtLarge(n){
+  if(!n) return '—';
+  if(n>=1e12) return (n/1e12).toFixed(2)+'T';
+  if(n>=1e9)  return (n/1e9).toFixed(2)+'B';
+  if(n>=1e6)  return (n/1e6).toFixed(2)+'M';
+  return n.toLocaleString();
+}
+function scoreColor(s){
+  if(s>=78) return '#00ff41';
+  if(s>=58) return '#00f0ff';
+  if(s>=38) return '#ffaa00';
+  return '#ff00ff';
+}
+function rsiColor(r){
+  if(r<30) return '#00ff41';
+  if(r>70) return '#ff00ff';
+  return '#00f0ff';
+}
+
+// ── BOOT ─────────────────────────────────────────────────
+window.addEventListener('load', initializeApp);
+setInterval(()=>{ if(cryptoData.length>0) refreshData(); }, 900000); // 15 minutes
+</script>
+</body>
+</html>
